@@ -10,9 +10,12 @@ export default function AdminLoginPage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const [debugInfo, setDebugInfo] = useState(null);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setDebugInfo(null);
     setLoading(true);
 
     try {
@@ -21,7 +24,21 @@ export default function AdminLoginPage() {
       localStorage.setItem('token', response.token);
       navigate('/admin/dashboard');
     } catch (err) {
-      setError('Credenciales incorrectas o error de conexión');
+      const apiMessage = err.response?.data?.message || err.message;
+      const apiErrorDetail = err.response?.data?.error || 'Sin detalle';
+      
+      setError(`Error del Backend: [${apiErrorDetail}] - ${apiMessage}`);
+
+      // Auto-fetch debug info temporal para ayudarte
+      try {
+        const debugRes = await fetch(`http://localhost:8080/api/auth/debug?correo=${credentials.username}`);
+        if(debugRes.ok) {
+           const debugJson = await debugRes.json();
+           setDebugInfo(debugJson);
+        }
+      } catch (debugErr) {
+        console.warn("No se pudo obtener debug info localmente", debugErr);
+      }
     } finally {
       setLoading(false);
     }
@@ -72,8 +89,16 @@ export default function AdminLoginPage() {
           </div>
 
           {error && (
-            <div className="bg-warmred/10 text-warmred text-sm font-medium px-4 py-3 rounded-lg text-center">
+            <div className="bg-warmred/10 text-warmred text-sm font-medium px-4 py-3 rounded-lg text-left">
+              <strong>Fallo al Iniciar Sesión:</strong><br/>
               {error}
+            </div>
+          )}
+
+          {debugInfo && (
+            <div className="bg-slate-dark text-white p-4 rounded-lg text-xs font-mono overflow-auto max-h-48 border border-slate-700 shadow-inner">
+              <span className="text-terracotta border-b border-terracotta mb-2 inline-block">-- DB DEBUG INFO --</span>
+              <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
             </div>
           )}
 

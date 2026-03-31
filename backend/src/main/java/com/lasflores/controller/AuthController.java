@@ -17,6 +17,20 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final SecurityConfig.JwtUtil jwtUtil;
+    private final com.lasflores.repository.UserRepository userRepository;
+
+    @org.springframework.web.bind.annotation.GetMapping("/debug")
+    public ResponseEntity<?> debugUser(@org.springframework.web.bind.annotation.RequestParam String correo) {
+        return userRepository.findByCorreo(correo)
+            .map(u -> ResponseEntity.ok(java.util.Map.of(
+                "existe", true,
+                "correo_encontrado", u.getCorreo(),
+                "rol", u.getRol().name(),
+                "hash_guardado", u.getPassword(),
+                "mensaje_ayuda", "Si el hash coincide, el PasswordEncoder está fallando. Si no coincide, usaste otra contraseña. Si no existe, el admin no se guardó."
+            )))
+            .orElse(ResponseEntity.ok(java.util.Map.of("existe", false, "error", "Usuario no encontrado en la DB")));
+    }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {

@@ -54,6 +54,7 @@ export default function Navbar() {
           <div className="flex items-center gap-4">
             <button
               id="cart-toggle"
+              aria-label="Abrir carrito"
               onClick={toggleCart}
               className="relative p-2 rounded-xl hover:bg-cream-200 transition-colors duration-200 group"
             >
@@ -75,6 +76,7 @@ export default function Navbar() {
 
             {/* Mobile menu button */}
             <button
+              aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
               className="md:hidden p-2 rounded-xl hover:bg-cream-200 transition-colors"
               onClick={() => setMobileOpen(!mobileOpen)}
             >

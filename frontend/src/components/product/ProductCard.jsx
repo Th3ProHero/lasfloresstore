@@ -72,6 +72,7 @@ export default function ProductCard({ product, index = 0 }) {
               e.stopPropagation();
               navigate(`/producto/${product.id}`);
             }}
+            aria-label="Ver detalles"
             className="bg-white/90 backdrop-blur-sm p-2.5 rounded-full shadow-lg hover:bg-white transition-colors"
           >
             <HiEye className="w-5 h-5 text-slate-dark" />
@@ -80,6 +81,7 @@ export default function ProductCard({ product, index = 0 }) {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleQuickAdd}
+            aria-label="Agregar al carrito"
             className="bg-terracotta text-white p-2.5 rounded-full shadow-lg hover:bg-terracotta-dark transition-colors"
           >
             <HiShoppingCart className="w-5 h-5" />

@@ -87,6 +87,7 @@ export default function CatalogPage() {
               <button
                 onClick={() => setPage(Math.max(0, page - 1))}
                 disabled={page === 0}
+                aria-label="Página anterior"
                 className="p-2 rounded-xl border border-cream-300 hover:bg-cream-200
                          disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
@@ -100,6 +101,8 @@ export default function CatalogPage() {
                   <button
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
+                    aria-label={`Ir a página ${pageNum + 1}`}
+                    aria-current={pageNum === page ? "page" : undefined}
                     className={`w-10 h-10 rounded-xl text-sm font-medium transition-all duration-200
                       ${pageNum === page
                         ? 'bg-terracotta text-white shadow-md'
@@ -114,6 +117,7 @@ export default function CatalogPage() {
               <button
                 onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
                 disabled={page >= totalPages - 1}
+                aria-label="Página siguiente"
                 className="p-2 rounded-xl border border-cream-300 hover:bg-cream-200
                          disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >

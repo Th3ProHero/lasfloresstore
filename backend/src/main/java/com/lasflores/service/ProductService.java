@@ -28,7 +28,14 @@ public class ProductService {
     }
 
     public Page<ProductDTO> getFilteredProducts(Categoria categoria, String marca, String search, Pageable pageable) {
-        return productRepository.findByFilters(categoria, marca, search, pageable).map(this::toDTO);
+        String safeMarca = (marca == null) ? "" : marca;
+        String safeSearch = (search == null) ? "" : search;
+        
+        if (categoria != null) {
+            return productRepository.findByFiltersWithCategoria(categoria, safeMarca, safeSearch, pageable).map(this::toDTO);
+        } else {
+            return productRepository.findByFiltersAllCategorias(safeMarca, safeSearch, pageable).map(this::toDTO);
+        }
     }
 
     public Page<ProductDTO> getProductsOnSale(Pageable pageable) {

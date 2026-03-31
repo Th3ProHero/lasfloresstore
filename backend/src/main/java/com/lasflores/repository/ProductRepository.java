@@ -22,11 +22,20 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
 
     @Query("SELECT p FROM Product p WHERE " +
-           "(:categoria IS NULL OR p.categoria = :categoria) AND " +
-           "(:marca IS NULL OR LOWER(p.marca) LIKE LOWER(CONCAT('%', :marca, '%'))) AND " +
-           "(:search IS NULL OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :search, '%')))")
-    Page<Product> findByFilters(
+           "p.categoria = :categoria AND " +
+           "LOWER(p.marca) LIKE LOWER(CONCAT('%', :marca, '%')) AND " +
+           "LOWER(p.nombre) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<Product> findByFiltersWithCategoria(
         @Param("categoria") Categoria categoria,
+        @Param("marca") String marca,
+        @Param("search") String search,
+        Pageable pageable
+    );
+
+    @Query("SELECT p FROM Product p WHERE " +
+           "LOWER(p.marca) LIKE LOWER(CONCAT('%', :marca, '%')) AND " +
+           "LOWER(p.nombre) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<Product> findByFiltersAllCategorias(
         @Param("marca") String marca,
         @Param("search") String search,
         Pageable pageable

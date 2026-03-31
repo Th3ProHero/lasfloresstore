@@ -1,0 +1,64 @@
+services:
+  # ─── PostgreSQL Database ─────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: lasflores-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-lasflores}
+      POSTGRES_USER: ${DB_USER:-lasflores}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-lasflores123}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - lasflores-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-lasflores}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # ─── Spring Boot Backend ─────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lasflores-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: db
+      DB_NAME: ${DB_NAME:-lasflores}
+      DB_USER: ${DB_USER:-lasflores}
+      DB_PASSWORD: ${DB_PASSWORD:-lasflores123}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - lasflores-net
+    restart: unless-stopped
+
+  # ─── React Frontend (Nginx) ─────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: lasflores-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - lasflores-net
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  lasflores-net:
+    driver: bridge

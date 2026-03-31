@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { HiPlus, HiPhotograph, HiLogout, HiX, HiPencil, HiTrash, HiDocumentText, HiViewGrid} from 'react-icons/hi';
@@ -16,6 +16,7 @@ export default function AdminDashboard() {
 
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [loading, setLoading] = useState(false);
   
   // Estado del modal
@@ -283,31 +284,76 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody>
                   {orders.map((o) => (
-                    <tr key={o.id} className="border-b border-cream-200 hover:bg-cream-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="font-bold text-slate-dark">#{o.id}</span>
-                        <div className="text-xs text-slate-light">{new Date(o.createdAt).toLocaleDateString()}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-slate-dark">{o.customerName}</div>
-                        <div className="text-xs text-slate-mid">{o.customerPhone} | {o.metodoPago}</div>
-                      </td>
-                      <td className="px-6 py-4 font-bold text-terracotta">
-                        ${Number(o.total).toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <select 
-                          value={o.status}
-                          onChange={(e) => handleStatusChange(o.id, e.target.value)}
-                          className={`px-3 py-1.5 rounded-lg font-bold text-xs cursor-pointer border-0 outline-none ring-2 focus:ring-sage ${o.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700 ring-yellow-300' : o.status === 'PROCESSING' ? 'bg-blue-100 text-blue-700 ring-blue-300' : o.status === 'COMPLETED' ? 'bg-green-100 text-green-700 ring-green-300' : 'bg-red-100 text-red-700 ring-red-300'}`}
-                        >
-                          <option value="PENDING">PENDIENTE</option>
-                          <option value="PROCESSING">PREPARANDO PEDIDO</option>
-                          <option value="COMPLETED">ENTREGADO</option>
-                          <option value="CANCELLED">CANCELADO</option>
-                        </select>
-                      </td>
-                    </tr>
+                    <React.Fragment key={o.id}>
+                      <tr 
+                        onClick={() => setExpandedOrderId(expandedOrderId === o.id ? null : o.id)}
+                        className={`border-b border-cream-200 hover:bg-cream-100 transition-colors cursor-pointer ${expandedOrderId === o.id ? 'bg-cream-50' : ''}`}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="font-bold text-slate-dark">#{o.id}</span>
+                          <div className="text-xs text-slate-light">{new Date(o.createdAt).toLocaleDateString()}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="font-semibold text-slate-dark">{o.customerName}</div>
+                          <div className="text-xs text-slate-mid">{o.customerPhone} | {o.metodoPago}</div>
+                        </td>
+                        <td className="px-6 py-4 font-bold text-terracotta">
+                          ${Number(o.total).toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <select 
+                              value={o.status}
+                              onChange={(e) => handleStatusChange(o.id, e.target.value)}
+                              className={`px-3 py-1.5 rounded-lg font-bold text-xs cursor-pointer border-0 outline-none ring-2 focus:ring-sage ${o.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700 ring-yellow-300' : o.status === 'PROCESSING' ? 'bg-blue-100 text-blue-700 ring-blue-300' : o.status === 'COMPLETED' ? 'bg-green-100 text-green-700 ring-green-300' : 'bg-red-100 text-red-700 ring-red-300'}`}
+                            >
+                              <option value="PENDING">PENDIENTE</option>
+                              <option value="PROCESSING">PREPARANDO PEDIDO</option>
+                              <option value="COMPLETED">ENTREGADO</option>
+                              <option value="CANCELLED">CANCELADO</option>
+                            </select>
+                          </div>
+                        </td>
+                      </tr>
+                      {expandedOrderId === o.id && (
+                        <tr className="bg-slate-50 border-b border-cream-300 shadow-inner">
+                          <td colSpan="4" className="p-0">
+                            <div className="p-6 bg-texture bg-cream-50 border border-t-0 border-cream-200">
+                              <h4 className="font-display font-bold text-slate-dark uppercase tracking-wider text-xs mb-3 border-b border-cream-300 pb-2">
+                                🎟️ TICKET DE COMPRA DETALLADO
+                              </h4>
+                              <div className="space-y-2">
+                                {o.items?.map((item, idx) => (
+                                  <div key={idx} className="flex justify-between items-center text-sm py-1 border-b border-dashed border-cream-300 last:border-0">
+                                    <div className="flex flex-col">
+                                      <span className="font-semibold text-slate-dark">
+                                        {item.cantidad}x {item.productName}
+                                      </span>
+                                      {item.variantSabor && (
+                                        <span className="text-xs text-slate-mid ml-4">↳ Variedad: {item.variantSabor}</span>
+                                      )}
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="font-bold text-slate-dark">${Number(item.subtotal).toFixed(2)}</div>
+                                      <div className="text-[10px] text-slate-light">${Number(item.unitPrice).toFixed(2)} c/u</div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="mt-4 pt-3 border-t-2 border-slate-700 flex justify-between items-center">
+                                <span className="font-bold text-slate-dark uppercase text-sm">TOTAL A PAGAR</span>
+                                <span className="font-bold text-terracotta text-lg">${Number(o.total).toFixed(2)}</span>
+                              </div>
+                              {o.notas && (
+                                <div className="mt-4 p-3 bg-yellow-50 rounded-lg text-xs text-yellow-800 border border-yellow-200">
+                                  <strong>Notas del Cliente:</strong> {o.notas}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                   {orders.length === 0 && (
                     <tr><td colSpan="4" className="px-6 py-8 text-center text-slate-light">No hay pedidos recientes.</td></tr>

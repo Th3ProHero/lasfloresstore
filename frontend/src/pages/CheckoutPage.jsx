@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { HiArrowLeft, HiCreditCard, HiCash, HiOfficeBuilding, HiCheck } from 'react-icons/hi';
 import { useCart } from '../context/CartContext';
 import { processCheckout } from '../api/client';
+import FlowerExplosion from '../components/ui/FlowerExplosion';
 
 const PAYMENT_METHODS = [
   {
@@ -37,6 +38,7 @@ export default function CheckoutPage() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', notas: '' });
   const [submitting, setSubmitting] = useState(false);
   const [orderResult, setOrderResult] = useState(null);
+  const [finalOrderInfo, setFinalOrderInfo] = useState(null);
   const [error, setError] = useState(null);
 
   if (items.length === 0 && !orderResult) {
@@ -59,51 +61,81 @@ export default function CheckoutPage() {
   // ─── Success ───
   if (orderResult) {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="max-w-lg mx-auto px-4 py-16 text-center"
-      >
+      <div className="relative min-h-[80vh] py-16">
+        <FlowerExplosion />
+        
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', delay: 0.2 }}
-          className="w-20 h-20 bg-sage/20 rounded-full flex items-center justify-center mx-auto mb-6"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-xl mx-auto px-4 text-center z-10 relative"
         >
-          <HiCheck className="w-10 h-10 text-sage" />
+          <motion.div
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: 'spring', damping: 12, delay: 0.2 }}
+            className="w-24 h-24 bg-sage rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-sage/30"
+          >
+            <HiCheck className="w-12 h-12 text-white" />
+          </motion.div>
+          <h2 className="font-display text-4xl font-bold text-slate-dark mb-2">
+            ¡Pedido Extraordinario!
+          </h2>
+          <p className="text-base text-slate-mid mb-8">{orderResult.message}</p>
+          
+          {/* TICKET DE COMPRA */}
+          <div className="bg-white rounded-2xl border border-cream-300 shadow-xl overflow-hidden mb-8 text-left">
+            <div className="bg-cream-100 p-6 border-b border-cream-300 flex justify-between items-center text-slate-dark relative overflow-hidden">
+               <div className="absolute top-0 right-0 text-7xl opacity-5 -translate-y-4 translate-x-4">🌸</div>
+               <div>
+                  <h3 className="font-bold text-lg">Ticket de Orden</h3>
+                  <p className="text-xs text-slate-mid">Fecha: {new Date(orderResult.createdAt).toLocaleString()}</p>
+               </div>
+               <div className="text-right">
+                  <p className="text-sm font-bold text-terracotta">#{orderResult.orderId}</p>
+                  <span className="text-xs font-semibold bg-sage text-white px-2 py-1 rounded-md uppercase">
+                    {orderResult.status === 'CONFIRMED' ? 'APROBADA' : 'PENDIENTE'}
+                  </span>
+               </div>
+            </div>
+
+            <div className="p-6">
+              <div className="space-y-4">
+                {finalOrderInfo?.items?.map((item, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-sm border-b border-dashed border-cream-200 pb-2 last:border-0">
+                    <div className="flex-1">
+                      <span className="font-bold text-slate-dark mr-2">{item.cantidad}x</span> 
+                      <span className="text-slate-mid">{item.nombre}</span>
+                      {item.sabor && <div className="text-[11px] text-slate-light ml-6">↳ Variedad: {item.sabor}</div>}
+                    </div>
+                    <div className="font-semibold text-slate-dark">
+                      ${(item.precioUnitario * item.cantidad).toFixed(2)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-cream-50 p-6 border-t border-cream-300">
+              <div className="flex justify-between text-sm mb-2 text-slate-mid">
+                <span>Método de Pago:</span>
+                <span className="font-semibold">{orderResult.metodoPago}</span>
+              </div>
+              <div className="flex justify-between items-end border-t border-slate-300 pt-4 mt-2">
+                <span className="text-sm font-bold uppercase text-slate-dark">Total Pagado:</span>
+                <span className="text-3xl font-bold text-terracotta">${Number(orderResult.total).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 bg-slate-dark text-white px-8 py-4 rounded-xl
+                     font-semibold shadow-lg hover:shadow-xl hover:bg-slate-mid transition-all duration-300"
+          >
+            Volver a la Tienda
+          </Link>
         </motion.div>
-        <h2 className="font-display text-3xl font-bold text-slate-dark mb-2">
-          ¡Pedido Realizado!
-        </h2>
-        <p className="text-sm text-slate-mid mb-6">{orderResult.message}</p>
-        <div className="bg-white rounded-2xl border border-cream-300 p-6 mb-6 text-left space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-mid">Orden #</span>
-            <span className="font-semibold text-slate-dark">{orderResult.orderId}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-mid">Total</span>
-            <span className="font-bold text-terracotta text-lg">${Number(orderResult.total).toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-mid">Método de pago</span>
-            <span className="font-semibold text-slate-dark">{orderResult.metodoPago}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-slate-mid">Estado</span>
-            <span className={`font-semibold ${orderResult.status === 'CONFIRMED' ? 'text-sage' : 'text-gold'}`}>
-              {orderResult.status === 'CONFIRMED' ? 'Confirmado' : 'Pendiente'}
-            </span>
-          </div>
-        </div>
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 bg-terracotta text-white px-6 py-3 rounded-xl
-                   font-semibold text-sm hover:bg-terracotta-dark transition-colors"
-        >
-          Volver al Inicio
-        </Link>
-      </motion.div>
+      </div>
     );
   }
 
@@ -124,6 +156,13 @@ export default function CheckoutPage() {
         })),
       };
       const result = await processCheckout(payload);
+      
+      // Guardar informacion temporal para el ticket
+      setFinalOrderInfo({
+         items: [...items],
+         totalPrice
+      });
+      
       setOrderResult(result);
       clearCart();
     } catch (err) {

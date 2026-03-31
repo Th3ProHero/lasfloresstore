@@ -17,11 +17,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.stereotype.Component;
@@ -42,11 +40,7 @@ public class SecurityConfig {
     @Value("${app.jwt.expiration}")
     private long jwtExpiration;
 
-    @Value("${app.admin.username}")
-    private String adminUsername;
 
-    @Value("${app.admin.password}")
-    private String adminPassword;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -54,13 +48,14 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService(PasswordEncoder encoder) {
-        var admin = User.builder()
-                .username(adminUsername)
-                .password(encoder.encode(adminPassword))
-                .roles("ADMIN")
-                .build();
-        return new InMemoryUserDetailsManager(admin);
+    public UserDetailsService userDetailsService(com.lasflores.repository.UserRepository userRepository) {
+        return username -> userRepository.findByCorreo(username)
+                .map(user -> org.springframework.security.core.userdetails.User.builder()
+                        .username(user.getCorreo())
+                        .password(user.getPassword())
+                        .roles(user.getRol().name())
+                        .build())
+                .orElseThrow(() -> new org.springframework.security.core.userdetails.UsernameNotFoundException("Usuario no encontrado con correo: " + username));
     }
 
     @Bean

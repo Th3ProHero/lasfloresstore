@@ -47,10 +47,10 @@ export default function AdminLoginPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-xs font-semibold text-slate-mid uppercase tracking-wider mb-2">
-              Usuario
+              Correo
             </label>
             <input
-              type="text"
+              type="email"
               required
               value={credentials.username}
               onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}

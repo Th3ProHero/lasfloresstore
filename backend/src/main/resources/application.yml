@@ -38,9 +38,6 @@ app:
     expiration: 86400000  # 24 hours
   inventory:
     low-stock-threshold: 10
-  admin:
-    username: admin
-    password: lasflores2024
 
 springdoc:
   api-docs:

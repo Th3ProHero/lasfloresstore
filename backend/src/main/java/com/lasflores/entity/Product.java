@@ -46,7 +46,7 @@ public class Product {
     @Builder.Default
     private Integer numInventario = 0;
 
-    @Column(name = "imagen_url")
+    @Column(name = "imagen_url", columnDefinition = "TEXT")
     private String imagenUrl;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

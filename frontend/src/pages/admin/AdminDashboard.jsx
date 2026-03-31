@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { HiPlus, HiPhotograph, HiLogout, HiX } from 'react-icons/hi';
-import client, { getProducts } from '../../api/client';
+import { HiPlus, HiPhotograph, HiLogout, HiX, HiPencil, HiTrash } from 'react-icons/hi';
+import client, { getProducts, updateProduct } from '../../api/client';
 
 const CATEGORIAS = [
   'BEBIDAS', 'LACTEOS', 'BOTANAS', 'LIMPIEZA', 'HIGIENE',
@@ -15,12 +15,17 @@ export default function AdminDashboard() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   
-  // Estado del modal de nuevo producto
+  // Estado del modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form, setForm] = useState({
+  const [editingId, setEditingId] = useState(null);
+
+  const initialFormState = {
     nombre: '', marca: '', precio: '', categoria: 'ABARROTES', 
+    enOferta: false, porcentajeDescuento: 0,
     numInventario: '', descripcion: '', imagenUrl: ''
-  });
+  };
+
+  const [form, setForm] = useState(initialFormState);
   const [previewImage, setPreviewImage] = useState(null);
 
   useEffect(() => {
@@ -67,27 +72,64 @@ export default function AdminDashboard() {
     };
   };
 
-  const handleCreateProduct = async (e) => {
+  const handleOpenCreate = () => {
+    setEditingId(null);
+    setForm(initialFormState);
+    setPreviewImage(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (p) => {
+    setEditingId(p.id);
+    setForm({
+      nombre: p.nombre || '',
+      marca: p.marca || '',
+      precio: p.precio || '',
+      categoria: p.categoria || 'ABARROTES',
+      enOferta: p.enOferta || false,
+      porcentajeDescuento: p.porcentajeDescuento || 0,
+      numInventario: p.numInventario || '',
+      descripcion: p.descripcion || '',
+      imagenUrl: p.imagenUrl || ''
+    });
+    setPreviewImage(p.imagenUrl || null);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if(!window.confirm('¿Seguro que deseas eliminar este producto?')) return;
+    try {
+      await client.delete('/products/' + id);
+      fetchDashboardData();
+    } catch (err) {
+      alert('Error al eliminar');
+    }
+  };
+
+  const handleSaveProduct = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Usamos el cliente con interceptor que inyecta el token
-      await client.post('/products', {
+      const payload = {
         ...form,
         precio: parseFloat(form.precio),
+        porcentajeDescuento: parseInt(form.porcentajeDescuento || 0),
         numInventario: parseInt(form.numInventario),
-      });
+      };
+
+      if (editingId) {
+        await updateProduct(editingId, payload);
+      } else {
+        await client.post('/products', payload);
+      }
+
       setIsModalOpen(false);
-      
-      // Limpiar formulario
-      setForm({ nombre: '', marca: '', precio: '', categoria: 'ABARROTES', numInventario: '', descripcion: '', imagenUrl: '' });
+      setForm(initialFormState);
       setPreviewImage(null);
-      
-      // Recargar tabla
       fetchDashboardData();
     } catch (err) {
       console.error(err);
-      alert('Error al crear: ' + (err.response?.data?.message || err.message));
+      alert('Error al guardar: ' + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
@@ -116,7 +158,7 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-display text-3xl font-bold text-slate-dark">Mis Productos</h2>
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenCreate}
             className="flex items-center gap-2 bg-sage hover:bg-sage-dark text-white px-5 py-2.5 rounded-xl font-semibold shadow-md transition-all"
           >
             <HiPlus className="w-5 h-5" />
@@ -134,6 +176,7 @@ export default function AdminDashboard() {
                 <th className="px-6 py-4">Categoría</th>
                 <th className="px-6 py-4">Stock</th>
                 <th className="px-6 py-4">Precio</th>
+                <th className="px-6 py-4 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -161,12 +204,25 @@ export default function AdminDashboard() {
                      {p.numInventario}
                   </td>
                   <td className="px-6 py-4 font-bold text-slate-dark">
-                    ${Number(p.precioFinal).toFixed(2)}
+                    <div className="flex flex-col">
+                       <span>${Number(p.precioFinal).toFixed(2)}</span>
+                       {p.enOferta && <span className="text-xs text-warmred">(-{p.porcentajeDescuento}%)</span>}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                       <button onClick={() => handleOpenEdit(p)} className="p-2 bg-cream-200 hover:bg-terracotta hover:text-white rounded-lg transition-colors text-slate-dark" title="Editar">
+                         <HiPencil />
+                       </button>
+                       <button onClick={() => handleDelete(p.id)} className="p-2 bg-cream-200 hover:bg-warmred hover:text-white rounded-lg transition-colors text-slate-dark" title="Eliminar">
+                         <HiTrash />
+                       </button>
+                    </div>
                   </td>
                 </tr>
               ))}
               {products.length === 0 && (
-                <tr><td colSpan="5" className="px-6 py-8 text-center text-slate-light">No hay productos. Agrega uno.</td></tr>
+                <tr><td colSpan="6" className="px-6 py-8 text-center text-slate-light">No hay productos. Agrega uno.</td></tr>
               )}
             </tbody>
           </table>
@@ -182,14 +238,16 @@ export default function AdminDashboard() {
             className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden mt-10 md:mt-0"
           >
             <div className="flex justify-between items-center p-6 border-b border-cream-300 bg-cream-50">
-              <h3 className="font-display text-2xl font-bold text-slate-dark">Agregar Nuevo Producto</h3>
+              <h3 className="font-display text-2xl font-bold text-slate-dark">
+                {editingId ? 'Editar Producto' : 'Agregar Nuevo Producto'}
+              </h3>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-cream-200 rounded-lg text-slate-dark">
                 <HiX className="w-6 h-6" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateProduct} className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <form onSubmit={handleSaveProduct} className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                 
                 {/* Columna Izquierda: Imagen */}
                 <div>
@@ -243,6 +301,17 @@ export default function AdminDashboard() {
                       <input type="number" required value={form.numInventario} onChange={e => setForm({...form, numInventario: e.target.value})} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" />
                     </div>
                   </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 pt-4 border-t border-cream-200">
+                <div className="flex items-center gap-3">
+                   <input type="checkbox" id="oferta" checked={form.enOferta} onChange={e => setForm({...form, enOferta: e.target.checked})} className="w-5 h-5 text-terracotta border-cream-300 rounded focus:ring-terracotta" />
+                   <label htmlFor="oferta" className="text-sm font-semibold text-slate-dark">¿En Oferta?</label>
+                </div>
+                <div className="md:col-span-2">
+                   <label className={`block text-xs font-semibold uppercase tracking-wider mb-1 ${!form.enOferta ? 'text-slate-light' : 'text-slate-mid'}`}>Porcentaje de Descuento (%)</label>
+                   <input type="number" min="0" max="100" disabled={!form.enOferta} value={form.porcentajeDescuento} onChange={e => setForm({...form, porcentajeDescuento: e.target.value})} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta disabled:opacity-50" />
                 </div>
               </div>
 

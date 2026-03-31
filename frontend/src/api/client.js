@@ -24,6 +24,9 @@ export const getProducts = (params = {}) =>
 export const getProduct = (id) =>
   client.get(`/products/${id}`).then((r) => r.data);
 
+export const updateProduct = (id, data) =>
+  client.put(`/products/${id}`, data).then((r) => r.data);
+
 export const getProductsOnSale = (params = {}) =>
   client.get('/products/ofertas', { params }).then((r) => r.data);
 

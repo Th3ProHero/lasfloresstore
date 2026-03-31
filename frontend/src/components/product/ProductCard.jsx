@@ -54,6 +54,8 @@ export default function ProductCard({ product, index = 0 }) {
           <img
             src={product.imagenUrl}
             alt={product.nombre}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
         ) : (

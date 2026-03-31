@@ -15,4 +15,15 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    target: 'esnext',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['framer-motion', 'react-icons'],
+        }
+      }
+    }
+  }
 })

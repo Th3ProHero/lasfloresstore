@@ -15,6 +15,10 @@ const HERO_CATEGORIES = [
   { emoji: '🥫', label: 'Enlatados', value: 'ENLATADOS' },
   { emoji: '🛒', label: 'Abarrotes', value: 'ABARROTES' },
   { emoji: '🧼', label: 'Higiene', value: 'HIGIENE' },
+  { emoji: '🍺', label: 'Cervezas', value: 'CERVEZAS' },
+  { emoji: '💊', label: 'Farmacia', value: 'MEDICAMENTOS' },
+  { emoji: '🍞', label: 'Panadería', value: 'PANADERIA' },
+  { emoji: '🐾', label: 'Mascotas', value: 'MASCOTAS' },
 ];
 
 export default function HomePage() {
@@ -95,7 +99,7 @@ export default function HomePage() {
           <h2 className="font-display text-2xl font-bold text-slate-dark mb-6">
             Categorías
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             {HERO_CATEGORIES.map((cat, i) => (
               <motion.div
                 key={cat.value}

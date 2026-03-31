@@ -16,6 +16,13 @@ const CATEGORIAS = [
   { value: 'FRUTAS_VERDURAS', label: 'Frutas y Verduras', emoji: '🥬' },
   { value: 'PANADERIA', label: 'Panadería', emoji: '🍞' },
   { value: 'MASCOTAS', label: 'Mascotas', emoji: '🐾' },
+  { value: 'CERVEZAS', label: 'Cervezas', emoji: '🍺' },
+  { value: 'MEDICAMENTOS', label: 'Farmacia', emoji: '💊' },
+  { value: 'CREMERIA', label: 'Cremería', emoji: '🧀' },
+  { value: 'DESECHABLES', label: 'Desechables', emoji: '🍽️' },
+  { value: 'SALSAS', label: 'Salsas', emoji: '🌶️' },
+  { value: 'ACEITES', label: 'Aceites', emoji: '🧴' },
+  { value: 'VELAS', label: 'Velas', emoji: '🕯️' },
 ];
 
 export default function ProductFilters({ filters, onFilterChange }) {

@@ -12,5 +12,12 @@ public enum Categoria {
     CONGELADOS,
     FRUTAS_VERDURAS,
     PANADERIA,
-    MASCOTAS
+    MASCOTAS,
+    CERVEZAS,
+    MEDICAMENTOS,
+    CREMERIA,
+    DESECHABLES,
+    SALSAS,
+    ACEITES,
+    VELAS
 }

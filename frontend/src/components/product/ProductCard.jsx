@@ -17,6 +17,13 @@ const CATEGORY_EMOJIS = {
   FRUTAS_VERDURAS: '🥬',
   PANADERIA: '🍞',
   MASCOTAS: '🐾',
+  CERVEZAS: '🍺',
+  MEDICAMENTOS: '💊',
+  CREMERIA: '🧀',
+  DESECHABLES: '🍽️',
+  SALSAS: '🌶️',
+  ACEITES: '🧴',
+  VELAS: '🕯️',
 };
 
 export default function ProductCard({ product, index = 0 }) {

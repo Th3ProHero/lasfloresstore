@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { HiArrowLeft, HiShoppingCart, HiMinus, HiPlus } from 'react-icons/hi';
-import { getProduct } from '../../api/client';
+import { getProduct, getProducts } from '../../api/client';
+import ProductCard from './ProductCard';
 import { useCart } from '../../context/CartContext';
 import VariantSelector from './VariantSelector';
 import OfferBadge from './OfferBadge';
@@ -21,6 +22,7 @@ export default function ProductDetail() {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [cantidad, setCantidad] = useState(1);
   const [added, setAdded] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
 
   useEffect(() => {
     setLoading(true);
@@ -29,6 +31,15 @@ export default function ProductDetail() {
         setProduct(data);
         if (data.variantes?.length > 0) {
           setSelectedVariant(data.variantes[0]);
+        }
+        // Fetch recomendaciones de la misma categoría
+        if (data.categoria) {
+           getProducts({ categoria: data.categoria, size: 10, sortBy: 'id', direction: 'desc' })
+             .then(res => {
+                const filtered = (res.content || []).filter(p => p.id !== data.id).slice(0, 8);
+                setRecommendations(filtered);
+             })
+             .catch(console.error);
         }
       })
       .catch(console.error)
@@ -202,6 +213,29 @@ export default function ProductDetail() {
           </div>
         </motion.div>
       </div>
+
+      {/* ─── Recomendaciones ─── */}
+      {recommendations.length > 0 && (
+        <motion.div
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ delay: 0.3 }}
+           className="mt-16 pt-8 border-t border-cream-300"
+        >
+           <h2 className="font-display text-2xl font-bold text-slate-dark mb-6">
+             Recomendados:
+           </h2>
+           {/* Contenedor con Scroll Horizontal (Snap) */}
+           <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 hide-scrollbar">
+             {recommendations.map((rec) => (
+               <div key={rec.id} className="w-64 flex-none snap-start">
+                  <ProductCard product={rec} />
+               </div>
+             ))}
+           </div>
+        </motion.div>
+      )}
+
     </div>
   );
 }

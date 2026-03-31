@@ -30,6 +30,8 @@ spring:
 
 server:
   port: 8080
+  tomcat:
+    max-http-form-post-size: 10MB
 
 # Custom properties
 app:

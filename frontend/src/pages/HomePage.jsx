@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { HiArrowRight, HiSparkles, HiShoppingBag } from 'react-icons/hi';
 import { getProductsOnSale, getProducts } from '../api/client';
 import ProductCard from '../components/product/ProductCard';
+import FloatingFlowers from '../components/ui/FloatingFlowers';
 
 const HERO_CATEGORIES = [
   { emoji: '🥤', label: 'Bebidas', value: 'BEBIDAS' },
@@ -35,12 +36,9 @@ export default function HomePage() {
     <div>
       {/* ─── Hero Section ─── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-cream-100 via-cream-50 to-cream-200">
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-10 left-10 text-[200px] rotate-12">🌸</div>
-          <div className="absolute bottom-10 right-10 text-[150px] -rotate-12">🌿</div>
-        </div>
+        <FloatingFlowers count={25} opacity={0.15} />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 relative z-10">
           <div className="max-w-2xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -194,10 +192,9 @@ export default function HomePage() {
           className="bg-gradient-to-r from-terracotta to-terracotta-dark rounded-3xl p-8 md:p-12 text-white
                    shadow-xl relative overflow-hidden"
         >
-          <div className="absolute top-0 right-0 text-[120px] opacity-10 -rotate-12 translate-x-8 -translate-y-4">
-            🌸
-          </div>
-          <div className="relative max-w-lg">
+          <FloatingFlowers count={10} opacity={0.2} />
+          
+          <div className="relative max-w-lg z-10">
             <h3 className="font-display text-2xl md:text-3xl font-bold mb-3">
               ¿Primera vez aquí?
             </h3>

@@ -5,6 +5,7 @@ import { getProducts } from '../api/client';
 import ProductGrid from '../components/product/ProductGrid';
 import ProductFilters from '../components/product/ProductFilters';
 import { HiChevronLeft, HiChevronRight } from 'react-icons/hi';
+import FloatingFlowers from '../components/ui/FloatingFlowers';
 
 export default function CatalogPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -56,12 +57,15 @@ export default function CatalogPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+      {/* Elemento decorativo */}
+      <FloatingFlowers count={30} opacity={0.06} className="pointer-events-none fixed" />
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
+        className="mb-8 relative z-10"
       >
         <h1 className="font-display text-3xl font-bold text-slate-dark">Catálogo</h1>
         <p className="text-sm text-slate-mid mt-1">

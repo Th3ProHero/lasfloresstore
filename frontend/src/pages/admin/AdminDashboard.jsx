@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { HiPlus, HiPhotograph, HiLogout, HiX, HiPencil, HiTrash } from 'react-icons/hi';
-import client, { getProducts, updateProduct } from '../../api/client';
+import { HiPlus, HiPhotograph, HiLogout, HiX, HiPencil, HiTrash, HiDocumentText, HiViewGrid} from 'react-icons/hi';
+import client, { getProducts, updateProduct, getAdminOrders, updateOrderStatus } from '../../api/client';
 
 const CATEGORIAS = [
   'BEBIDAS', 'LACTEOS', 'BOTANAS', 'LIMPIEZA', 'HIGIENE',
@@ -12,7 +12,10 @@ const CATEGORIAS = [
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('productos'); // 'productos' | 'pedidos'
+
   const [products, setProducts] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   
   // Estado del modal
@@ -39,12 +42,24 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const res = await getProducts({ size: 100, sortBy: 'id', direction: 'desc' });
-      setProducts(res.content || []);
+      const { content } = await getProducts({ size: 100, sortBy: 'id', direction: 'desc' });
+      setProducts(content || []);
+      
+      const ordersData = await getAdminOrders();
+      setOrders(ordersData || []);
     } catch (error) {
       if (error.response?.status === 401 || error.response?.status === 403) {
         handleLogout();
       }
+    }
+  };
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      await updateOrderStatus(orderId, newStatus);
+      fetchDashboardData();
+    } catch (err) {
+      alert('Error actualizando estado del pedido');
     }
   };
 
@@ -155,78 +170,153 @@ export default function AdminDashboard() {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-3xl font-bold text-slate-dark">Mis Productos</h2>
+        {/* Sidebar Nav */}
+        <nav className="flex gap-4 mb-8">
           <button 
-            onClick={handleOpenCreate}
-            className="flex items-center gap-2 bg-sage hover:bg-sage-dark text-white px-5 py-2.5 rounded-xl font-semibold shadow-md transition-all"
+            onClick={() => setActiveTab('productos')}
+            className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all ${activeTab === 'productos' ? 'bg-sage text-white shadow-md' : 'bg-white text-slate-light hover:bg-cream-200 hover:text-slate-dark'}`}
           >
-            <HiPlus className="w-5 h-5" />
-            Nuevo Producto
+            <HiViewGrid className="w-5 h-5" />
+            <span className="font-semibold text-sm">Inventario</span>
           </button>
-        </div>
+          <button 
+            onClick={() => setActiveTab('pedidos')}
+            className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all ${activeTab === 'pedidos' ? 'bg-sage text-white shadow-md' : 'bg-white text-slate-light hover:bg-cream-200 hover:text-slate-dark'}`}
+          >
+            <HiDocumentText className="w-5 h-5" />
+            <span className="font-semibold text-sm">Pedidos y Envíos</span>
+          </button>
+        </nav>
 
-        {/* Tabla Simple de Productos */}
-        <div className="bg-white rounded-2xl border border-cream-300 shadow-sm overflow-hidden">
-          <table className="w-full text-left text-sm text-slate-mid">
-            <thead className="bg-cream-50 text-xs uppercase font-semibold text-slate-dark border-b border-cream-300">
-              <tr>
-                <th className="px-6 py-4">Foto</th>
-                <th className="px-6 py-4">Nombre / Marca</th>
-                <th className="px-6 py-4">Categoría</th>
-                <th className="px-6 py-4">Stock</th>
-                <th className="px-6 py-4">Precio</th>
-                <th className="px-6 py-4 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((p) => (
-                <tr key={p.id} className="border-b border-cream-200 hover:bg-cream-50 transition-colors">
-                  <td className="px-6 py-4">
-                     {p.imagenUrl ? (
-                        <div className="w-12 h-12 bg-cream-200 rounded-lg overflow-hidden flex items-center justify-center">
-                          <img src={p.imagenUrl} alt={p.nombre} className="w-full h-full object-cover" />
+        {activeTab === 'productos' && (
+          <>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-display text-3xl font-bold text-slate-dark">Mis Productos</h2>
+              <button 
+                onClick={handleOpenCreate}
+                className="flex items-center gap-2 bg-sage hover:bg-sage-dark text-white px-5 py-2.5 rounded-xl font-semibold shadow-md transition-all"
+              >
+                <HiPlus className="w-5 h-5" />
+                Nuevo Producto
+              </button>
+            </div>
+
+            {/* Tabla Simple de Productos */}
+            <div className="bg-white rounded-2xl border border-cream-300 shadow-sm overflow-hidden">
+              <table className="w-full text-left text-sm text-slate-mid">
+                <thead className="bg-cream-50 text-xs uppercase font-semibold text-slate-dark border-b border-cream-300">
+                  <tr>
+                    <th className="px-6 py-4">Foto</th>
+                    <th className="px-6 py-4">Nombre / Marca</th>
+                    <th className="px-6 py-4">Categoría</th>
+                    <th className="px-6 py-4">Stock</th>
+                    <th className="px-6 py-4">Precio</th>
+                    <th className="px-6 py-4 text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {products.map((p) => (
+                    <tr key={p.id} className="border-b border-cream-200 hover:bg-cream-50 transition-colors">
+                      <td className="px-6 py-4">
+                         {p.imagenUrl ? (
+                            <div className="w-12 h-12 bg-cream-200 rounded-lg overflow-hidden flex items-center justify-center">
+                              <img src={p.imagenUrl} alt={p.nombre} className="w-full h-full object-cover" />
+                            </div>
+                         ) : (
+                            <div className="w-12 h-12 bg-cream-200 rounded-lg flex items-center justify-center text-xl">📦</div>
+                         )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="font-semibold text-slate-dark">{p.nombre}</p>
+                        <p className="text-xs">{p.marca}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="bg-terracotta/10 text-terracotta text-[10px] font-bold px-2 py-1 rounded-full uppercase">
+                          {p.categoria}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 font-medium">
+                         {p.numInventario}
+                      </td>
+                      <td className="px-6 py-4 font-bold text-slate-dark">
+                        <div className="flex flex-col">
+                           <span>${Number(p.precioFinal).toFixed(2)}</span>
+                           {p.enOferta && <span className="text-xs text-warmred">(-{p.porcentajeDescuento}%)</span>}
                         </div>
-                     ) : (
-                        <div className="w-12 h-12 bg-cream-200 rounded-lg flex items-center justify-center text-xl">📦</div>
-                     )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="font-semibold text-slate-dark">{p.nombre}</p>
-                    <p className="text-xs">{p.marca}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="bg-terracotta/10 text-terracotta text-[10px] font-bold px-2 py-1 rounded-full uppercase">
-                      {p.categoria}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 font-medium">
-                     {p.numInventario}
-                  </td>
-                  <td className="px-6 py-4 font-bold text-slate-dark">
-                    <div className="flex flex-col">
-                       <span>${Number(p.precioFinal).toFixed(2)}</span>
-                       {p.enOferta && <span className="text-xs text-warmred">(-{p.porcentajeDescuento}%)</span>}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                       <button onClick={() => handleOpenEdit(p)} className="p-2 bg-cream-200 hover:bg-terracotta hover:text-white rounded-lg transition-colors text-slate-dark" title="Editar">
-                         <HiPencil />
-                       </button>
-                       <button onClick={() => handleDelete(p.id)} className="p-2 bg-cream-200 hover:bg-warmred hover:text-white rounded-lg transition-colors text-slate-dark" title="Eliminar">
-                         <HiTrash />
-                       </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {products.length === 0 && (
-                <tr><td colSpan="6" className="px-6 py-8 text-center text-slate-light">No hay productos. Agrega uno.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                           <button onClick={() => handleOpenEdit(p)} className="p-2 bg-cream-200 hover:bg-terracotta hover:text-white rounded-lg transition-colors text-slate-dark" title="Editar">
+                             <HiPencil />
+                           </button>
+                           <button onClick={() => handleDelete(p.id)} className="p-2 bg-cream-200 hover:bg-warmred hover:text-white rounded-lg transition-colors text-slate-dark" title="Eliminar">
+                             <HiTrash />
+                           </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {products.length === 0 && (
+                    <tr><td colSpan="6" className="px-6 py-8 text-center text-slate-light">No hay productos. Agrega uno.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {/* ===================== TAB PEDIDOS ===================== */}
+        {activeTab === 'pedidos' && (
+          <>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-display text-3xl font-bold text-slate-dark">Gestión de Pedidos</h2>
+            </div>
+            <div className="bg-white rounded-3xl shadow-sm border border-cream-300 overflow-hidden">
+              <table className="w-full text-left font-sans text-sm">
+                <thead className="bg-cream-100 text-slate-mid uppercase tracking-wide text-xs">
+                  <tr>
+                    <th className="px-6 py-4">ID / Fecha</th>
+                    <th className="px-6 py-4">Cliente</th>
+                    <th className="px-6 py-4">Total</th>
+                    <th className="px-6 py-4 text-center">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((o) => (
+                    <tr key={o.id} className="border-b border-cream-200 hover:bg-cream-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="font-bold text-slate-dark">#{o.id}</span>
+                        <div className="text-xs text-slate-light">{new Date(o.createdAt).toLocaleDateString()}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-semibold text-slate-dark">{o.customerName}</div>
+                        <div className="text-xs text-slate-mid">{o.customerPhone} | {o.metodoPago}</div>
+                      </td>
+                      <td className="px-6 py-4 font-bold text-terracotta">
+                        ${Number(o.total).toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <select 
+                          value={o.status}
+                          onChange={(e) => handleStatusChange(o.id, e.target.value)}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-xs cursor-pointer border-0 outline-none ring-2 focus:ring-sage ${o.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700 ring-yellow-300' : o.status === 'PROCESSING' ? 'bg-blue-100 text-blue-700 ring-blue-300' : o.status === 'COMPLETED' ? 'bg-green-100 text-green-700 ring-green-300' : 'bg-red-100 text-red-700 ring-red-300'}`}
+                        >
+                          <option value="PENDING">PENDIENTE</option>
+                          <option value="PROCESSING">PREPARANDO PEDIDO</option>
+                          <option value="COMPLETED">ENTREGADO</option>
+                          <option value="CANCELLED">CANCELADO</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                  {orders.length === 0 && (
+                    <tr><td colSpan="4" className="px-6 py-8 text-center text-slate-light">No hay pedidos recientes.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Modal de Creación */}

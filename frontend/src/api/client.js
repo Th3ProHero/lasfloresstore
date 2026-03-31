@@ -49,4 +49,12 @@ export const processCheckout = (data) =>
 export const login = (credentials) =>
   client.post('/auth/login', credentials).then((r) => r.data);
 
+// ─── Admin Orders ────────────────────────────────
+
+export const getAdminOrders = () =>
+  client.get('/admin/orders').then((r) => r.data);
+
+export const updateOrderStatus = (id, status) =>
+  client.put(`/admin/orders/${id}/status?status=${status}`).then((r) => r.data);
+
 export default client;

@@ -19,17 +19,31 @@ public class AuthController {
     private final SecurityConfig.JwtUtil jwtUtil;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
-        Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-        );
+    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
+        try {
+            Authentication auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            );
 
-        String token = jwtUtil.generateToken(auth.getName());
+            String token = jwtUtil.generateToken(auth.getName());
 
-        return ResponseEntity.ok(AuthResponse.builder()
-                .token(token)
-                .username(auth.getName())
-                .message("Login exitoso")
-                .build());
+            return ResponseEntity.ok(AuthResponse.builder()
+                    .token(token)
+                    .username(auth.getName())
+                    .message("Login exitoso")
+                    .build());
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(401).body(java.util.Map.of(
+                "error", "Unauthorized",
+                "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(java.util.Map.of(
+                "error", "Server Error",
+                "message", e.getMessage()
+            ));
+        }
     }
 }

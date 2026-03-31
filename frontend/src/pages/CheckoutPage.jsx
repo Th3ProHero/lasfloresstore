@@ -165,6 +165,8 @@ export default function CheckoutPage() {
       
       setOrderResult(result);
       clearCart();
+      // Forzar scroll al inicio para ver el ticket de éxito (ya que la URL no cambia)
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data?.error || 'Error al procesar la compra';
       setError(msg);

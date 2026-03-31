@@ -226,16 +226,21 @@ export default function AdminDashboard() {
     e.preventDefault();
     setLoading(true);
     try {
+      const payload = { ...promoForm };
+      // Spring Boot LocalDateTime strictly requires seconds if defaulting to ISO parser
+      if (payload.startDate && payload.startDate.length === 16) payload.startDate += ':00';
+      if (payload.endDate && payload.endDate.length === 16) payload.endDate += ':00';
+
       if (editingPromoId) {
-        await updatePromotion(editingPromoId, promoForm);
+        await updatePromotion(editingPromoId, payload);
       } else {
-        await createPromotion(promoForm);
+        await createPromotion(payload);
       }
       setIsPromoModal(false);
       fetchDashboardData();
     } catch(err) {
       console.error(err);
-      alert('Error al guardar promo');
+      alert('Error: ' + (err.response?.data?.message || err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
     }

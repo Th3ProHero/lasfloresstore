@@ -5,6 +5,7 @@ import { HiArrowRight, HiSparkles, HiShoppingBag } from 'react-icons/hi';
 import { getProductsOnSale, getProducts } from '../api/client';
 import ProductCard from '../components/product/ProductCard';
 import FloatingFlowers from '../components/ui/FloatingFlowers';
+import PromotionSlider from '../components/promotions/PromotionSlider';
 
 const HERO_CATEGORIES = [
   { emoji: '🥤', label: 'Bebidas', value: 'BEBIDAS' },
@@ -88,6 +89,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ─── Promotions Slider ─── */}
+      <PromotionSlider />
 
       {/* ─── Categories ─── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

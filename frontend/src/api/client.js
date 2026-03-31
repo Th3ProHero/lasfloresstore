@@ -57,4 +57,24 @@ export const getAdminOrders = () =>
 export const updateOrderStatus = (id, status) =>
   client.put(`/admin/orders/${id}/status?status=${status}`).then((r) => r.data);
 
+// ─── Promotions ──────────────────────────────────
+
+export const getActivePromotions = () =>
+  client.get('/promotions/active').then((r) => r.data);
+
+export const registerPromotionClick = (id) =>
+  client.post(`/promotions/${id}/click`).then((r) => r.data);
+
+export const getAllPromotions = () =>
+  client.get('/promotions').then((r) => r.data);
+
+export const createPromotion = (data) =>
+  client.post('/promotions', data).then((r) => r.data);
+
+export const updatePromotion = (id, data) =>
+  client.put(`/promotions/${id}`, data).then((r) => r.data);
+
+export const deletePromotion = (id) =>
+  client.delete(`/promotions/${id}`).then((r) => r.data);
+
 export default client;

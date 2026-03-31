@@ -20,8 +20,10 @@ export default function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-full bg-terracotta flex items-center justify-center text-white font-display font-bold text-lg
-                          group-hover:bg-terracotta-dark transition-colors duration-300">
-              F
+                          group-hover:bg-terracotta-dark transition-colors duration-300 relative">
+              <span className="z-10">F</span>
+              <span className="absolute -top-1.5 -right-1.5 text-sm transform rotate-12 group-hover:rotate-45 transition-transform duration-300">🌸</span>
+              <span className="absolute -bottom-1 -left-1 text-[10px] transform -rotate-12 group-hover:-rotate-45 transition-transform duration-300">🌿</span>
             </div>
             <div className="hidden sm:block">
               <h1 className="font-display text-xl font-bold text-slate-dark leading-tight">

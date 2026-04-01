@@ -44,12 +44,12 @@ export default function ProductCard({ product, index = 0 }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.4 }}
-      whileHover={{ y: -4 }}
+      initial={{ opacity: 0, y: 15 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "50px" }}
+      transition={{ duration: 0.3 }}
       className="group relative bg-white rounded-2xl border border-cream-300 overflow-hidden
-                 shadow-sm hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+                 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer will-change-transform"
       onClick={() => navigate(`/producto/${product.id}`)}
     >
       {/* Offer badge */}

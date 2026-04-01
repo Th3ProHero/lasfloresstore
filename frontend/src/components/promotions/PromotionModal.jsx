@@ -6,12 +6,12 @@ export default function PromotionModal({ promo, onClose }) {
   if (!promo) return null;
 
   return (
-    <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
+        style={{ willChange: 'opacity' }}
         className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-dark/60 backdrop-blur-sm"
       >
         <motion.div
@@ -19,6 +19,7 @@ export default function PromotionModal({ promo, onClose }) {
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 20 }}
           onClick={(e) => e.stopPropagation()}
+          style={{ willChange: 'transform, opacity' }}
           className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden relative"
         >
           {/* Close button */}
@@ -76,6 +77,5 @@ export default function PromotionModal({ promo, onClose }) {
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
   );
 }

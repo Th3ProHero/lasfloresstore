@@ -59,6 +59,7 @@ export default function PromotionSlider() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
+            style={{ willChange: 'transform, opacity' }}
             className="absolute inset-0 w-full h-full flex flex-col md:flex-row cursor-pointer"
             onClick={() => handlePromoClick(current)}
           >
@@ -124,7 +125,9 @@ export default function PromotionSlider() {
       </div>
 
       {/* Modal */}
-      {selectedPromo && <PromotionModal promo={selectedPromo} onClose={closeModal} />}
+      <AnimatePresence>
+        {selectedPromo && <PromotionModal promo={selectedPromo} onClose={closeModal} />}
+      </AnimatePresence>
     </section>
   );
 }

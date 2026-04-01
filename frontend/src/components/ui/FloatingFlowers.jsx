@@ -28,9 +28,9 @@ export default function FloatingFlowers({ count = 15, opacity = 0.1, className =
         <motion.div
           key={f.id}
           className="absolute"
-          initial={{ left: `${f.x}%`, top: `${f.y}%`, rotate: f.rotateStart }}
+          initial={{ y: 0, rotate: f.rotateStart }}
           animate={{
-            top: [`${f.y}%`, `${f.y - 15 > 0 ? f.y - 15 : 0}%`, `${f.y}%`],
+            y: [0, -150, 0], // GPU accelerated transform instead of CPU top/left recalculations
             rotate: [f.rotateStart, f.rotateStart + 180, f.rotateStart + 360],
           }}
           transition={{
@@ -40,9 +40,12 @@ export default function FloatingFlowers({ count = 15, opacity = 0.1, className =
             delay: f.delay,
           }}
           style={{
+            left: `${f.x}%`,
+            top: `${f.y}%`,
             fontSize: `${f.size}px`,
             filter: 'blur(1px)',
-            opacity: 0.8
+            opacity: 0.8,
+            willChange: 'transform'
           }}
         >
           {f.emoji}

@@ -5,13 +5,29 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Abarrotes Las Flores - Tu tienda de abarrotes de confianza. Productos de calidad al mejor precio." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <style id="critical-css">
+      body { margin: 0; font-family: system-ui, -apple-system, blinkmacsystemfont, 'Segoe UI', roboto, sans-serif; background-color: #FCF9F2; }
+      .skeleton-hero { background: linear-gradient(to bottom right, #fdfbf7, #fcf9f2, #f5f0e6); padding: 4rem 1rem; min-height: 60vh; display: flex; flex-direction: column; justify-content: center; }
+      .skeleton-hero h1 { font-size: 2.25rem; font-weight: 700; color: #0F172A; margin-bottom: 1rem; line-height: 1.1; }
+      .skeleton-hero p { font-size: 1rem; color: #64748b; line-height: 1.625; max-width: 32rem; }
+      @media (min-width: 768px) {
+        .skeleton-hero { padding: 6rem 2rem; }
+        .skeleton-hero h1 { font-size: 3.75rem; }
+        .skeleton-hero p { font-size: 1.125rem; }
+      }
+    </style>
     <title>Abarrotes Las Flores</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Esqueleto Pre-hidratado para Lighthouse FCP/LCP instantáneo -->
+      <div class="skeleton-hero">
+        <div style="max-width: 42rem; margin: 0 auto; width: 100%;">
+          <h1>Abarrotes <span style="color: #C4723A;">Las Flores</span></h1>
+          <p>Tu tienda de confianza con los mejores productos al mejor precio. Descubre nuestras ofertas y disfruta la comodidad de comprar desde casa.</p>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

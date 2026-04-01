@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { HiArrowRight, HiSparkles, HiShoppingBag } from 'react-icons/hi';
 import { getProductsOnSale, getProducts } from '../api/client';
 import ProductCard from '../components/product/ProductCard';
 import FloatingFlowers from '../components/ui/FloatingFlowers';
-import PromotionSlider from '../components/promotions/PromotionSlider';
+
+const PromotionSlider = lazy(() => import('../components/promotions/PromotionSlider'));
 
 const HERO_CATEGORIES = [
   { emoji: '🥤', label: 'Bebidas', value: 'BEBIDAS' },
@@ -91,7 +92,9 @@ export default function HomePage() {
       </section>
 
       {/* ─── Promotions Slider ─── */}
-      <PromotionSlider />
+      <Suspense fallback={<div className="h-[28rem] md:h-[400px] max-w-7xl mx-auto rounded-3xl bg-slate-900 animate-pulse my-8 md:my-12" />}>
+        <PromotionSlider />
+      </Suspense>
 
       {/* ─── Categories ─── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

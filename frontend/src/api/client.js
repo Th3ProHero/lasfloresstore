@@ -77,4 +77,12 @@ export const updatePromotion = (id, data) =>
 export const deletePromotion = (id) =>
   client.delete(`/promotions/${id}`).then((r) => r.data);
 
+// ─── Legal Content ───────────────────────────────
+
+export const getLegalContent = (type) =>
+  client.get(`/legal/${type}`).then((r) => r.data);
+
+export const saveLegalContent = (type, data) =>
+  client.post(`/legal/${type}`, data).then((r) => r.data);
+
 export default client;

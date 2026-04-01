@@ -85,6 +85,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/checkout").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/promotions/active").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/promotions/*/click").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/legal/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 // Swagger/OpenAPI
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**", "/swagger-ui.html").permitAll()
@@ -99,6 +100,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/inventory/**").hasRole("ADMIN")
                 .requestMatchers("/api/admin/orders/**").hasRole("ADMIN")
                 .requestMatchers("/api/promotions/**").hasRole("ADMIN")
+                .requestMatchers("/api/legal/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider)

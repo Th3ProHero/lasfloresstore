@@ -5,6 +5,7 @@ import { HiArrowLeft, HiCreditCard, HiCash, HiOfficeBuilding, HiCheck } from 're
 import { useCart } from '../context/CartContext';
 import { processCheckout } from '../api/client';
 import FlowerExplosion from '../components/ui/FlowerExplosion';
+import LegalModal from '../components/ui/LegalModal';
 
 const PAYMENT_METHODS = [
   {
@@ -40,6 +41,8 @@ export default function CheckoutPage() {
   const [orderResult, setOrderResult] = useState(null);
   const [finalOrderInfo, setFinalOrderInfo] = useState(null);
   const [error, setError] = useState(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   if (items.length === 0 && !orderResult) {
     return (
@@ -347,12 +350,25 @@ export default function CheckoutPage() {
               </div>
             </div>
 
+            <div className="mt-6 p-4 bg-cream-50 rounded-xl border border-cream-200 flex items-start gap-3">
+              <input 
+                 type="checkbox" 
+                 id="terms" 
+                 checked={termsAccepted} 
+                 onChange={(e) => setTermsAccepted(e.target.checked)} 
+                 className="mt-1 w-5 h-5 text-terracotta border-cream-300 rounded focus:ring-terracotta cursor-pointer" 
+              />
+              <label htmlFor="terms" className="text-sm text-slate-mid cursor-pointer select-none">
+                 He leído y acepto los <button type="button" onClick={(e) => { e.preventDefault(); setShowTermsModal(true); }} className="text-terracotta font-semibold hover:underline">Términos y Condiciones</button> para proceder con la compra.
+              </label>
+            </div>
+
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleSubmit}
-              disabled={!form.name || submitting}
-              className="w-full mt-6 py-3.5 bg-terracotta text-white font-semibold rounded-xl
+              disabled={!form.name || !termsAccepted || submitting}
+              className="w-full mt-4 py-3.5 bg-terracotta text-white font-semibold rounded-xl
                        hover:bg-terracotta-dark transition-all shadow-lg hover:shadow-xl
                        disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
@@ -368,6 +384,13 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      <LegalModal 
+        isOpen={showTermsModal} 
+        onClose={() => setShowTermsModal(false)} 
+        type="terms_and_conditions" 
+        title="Términos y Condiciones" 
+      />
     </div>
   );
 }

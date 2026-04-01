@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { HiPlus, HiPhotograph, HiLogout, HiX, HiPencil, HiTrash, HiDocumentText, HiViewGrid} from 'react-icons/hi';
-import client, { getProducts, updateProduct, getAdminOrders, updateOrderStatus, getAllPromotions, createPromotion, updatePromotion, deletePromotion } from '../../api/client';
-import { HiFire } from 'react-icons/hi';
+import client, { getProducts, updateProduct, getAdminOrders, updateOrderStatus, getAllPromotions, createPromotion, updatePromotion, deletePromotion, getLegalContent, saveLegalContent } from '../../api/client';
+import { HiFire, HiOutlineDocumentText } from 'react-icons/hi';
 
 const CATEGORIAS = [
   'BEBIDAS', 'LACTEOS', 'BOTANAS', 'LIMPIEZA', 'HIGIENE',
@@ -50,6 +50,11 @@ export default function AdminDashboard() {
   const [productSearch, setProductSearch] = useState('');
   const [showProductDropdown, setShowProductDropdown] = useState(false);
 
+  // --- Legal Content ---
+  const [legalDoc, setLegalDoc] = useState('terms_and_conditions'); // currently only terms
+  const [legalContent, setLegalContent] = useState('');
+  const [legalVersion, setLegalVersion] = useState(0);
+
   useEffect(() => {
     // Verificar que estemos autenticados
     if (!localStorage.getItem('token')) {
@@ -69,6 +74,12 @@ export default function AdminDashboard() {
 
       const promoData = await getAllPromotions();
       setPromotions(promoData || []);
+      
+      const legalData = await getLegalContent(legalDoc);
+      if (legalData) {
+        setLegalContent(legalData.content || '');
+        setLegalVersion(legalData.version || 0);
+      }
     } catch (error) {
       if (error.response?.status === 401 || error.response?.status === 403) {
         handleLogout();
@@ -248,6 +259,19 @@ export default function AdminDashboard() {
 
   const filteredProductsForSearch = products.filter(p => p.nombre.toLowerCase().includes(productSearch.toLowerCase())).slice(0, 5);
 
+  const handleSaveLegal = async () => {
+    setLoading(true);
+    try {
+      await saveLegalContent(legalDoc, { content: legalContent });
+      alert('Texto legal actualizado correctamente.');
+      fetchDashboardData();
+    } catch (err) {
+      alert('Error al guardar texto legal: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-cream-100 pb-12">
       {/* Navbar Minimalista Admin */}
@@ -290,6 +314,13 @@ export default function AdminDashboard() {
           >
             <HiFire className="w-5 h-5" />
             <span className="font-semibold text-sm">Dinámicas</span>
+          </button>
+          <button 
+            onClick={() => { setActiveTab('legales'); fetchDashboardData(); }}
+            className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all ${activeTab === 'legales' ? 'bg-sage text-white shadow-md' : 'bg-white text-slate-light hover:bg-cream-200 hover:text-slate-dark'}`}
+          >
+            <HiOutlineDocumentText className="w-5 h-5" />
+            <span className="font-semibold text-sm">Textos Legales</span>
           </button>
         </nav>
 
@@ -543,6 +574,57 @@ export default function AdminDashboard() {
               </table>
             </div>
           </>
+        )}
+
+        {/* ===================== TAB TEXTOS LEGALES ===================== */}
+        {activeTab === 'legales' && (
+          <div className="max-w-4xl">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                 <h2 className="font-display text-3xl font-bold text-slate-dark">Políticas y Textos Legales</h2>
+                 <p className="text-slate-mid text-sm mt-1">Versionando modificaciones para compliance y auditorías automáticas.</p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-cream-300 shadow-sm overflow-hidden p-6 md:p-8">
+               <div className="flex gap-4 mb-6">
+                  <button className="px-5 py-2.5 rounded-xl text-sm font-bold bg-terracotta text-white shadow-sm ring-2 ring-terracotta/20">
+                    Términos y Condiciones
+                  </button>
+                  <button disabled className="px-5 py-2.5 rounded-xl text-sm font-bold bg-cream-100 text-slate-light cursor-not-allowed">
+                    Políticas de Privacidad (Próximamente)
+                  </button>
+               </div>
+
+               <div className="mb-4">
+                  <div className="flex justify-between items-end mb-2">
+                     <label className="font-bold text-slate-dark uppercase tracking-wider text-xs">Redactar / Editar T&C</label>
+                     <span className="text-xs font-semibold bg-sage/20 text-sage px-3 py-1 rounded-full">
+                       Versión Actual: {legalVersion > 0 ? legalVersion : 'Ninguna'}
+                     </span>
+                  </div>
+                  <textarea 
+                     value={legalContent}
+                     onChange={(e) => setLegalContent(e.target.value)}
+                     className="w-full h-[50vh] min-h-[400px] p-4 bg-cream-50 border border-cream-300 rounded-xl focus:ring-2 focus:ring-terracotta focus:border-terracotta resize-y whitespace-pre-wrap font-sans text-sm text-slate-dark leading-relaxed"
+                     placeholder="Pega aquí todo el texto legal largo. Los saltos de párrafo se respetarán..."
+                  />
+                  <p className="text-xs text-slate-mid mt-3 flex items-center gap-1">
+                     <HiOutlineDocumentText className="w-4 h-4" /> Al guardar, se generará una nueva versión inmutable en el historial y se mostrará al instante en la pasarela de pagos.
+                  </p>
+               </div>
+
+               <div className="flex justify-end pt-4 border-t border-cream-200">
+                  <button 
+                     disabled={loading}
+                     onClick={handleSaveLegal}
+                     className="px-6 py-3 bg-sage hover:bg-sage-dark text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                  >
+                     {loading ? 'Guardando...' : 'Publicar Nueva Versión'}
+                  </button>
+               </div>
+            </div>
+          </div>
         )}
       </div>
 

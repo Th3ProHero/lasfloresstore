@@ -19,8 +19,14 @@ const OrderHistoryPage = () => {
         });
         setOrders(response.data);
       } catch (err) {
-        setError('No pudimos cargar tus pedidos. Intenta más tarde.');
-        console.error(err);
+        const status = err?.response?.status;
+        const detail = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Error desconocido';
+        console.error('[OrderHistoryPage] Error al cargar pedidos:', {
+          status,
+          detail,
+          fullError: err
+        });
+        setError(`Error ${status || ''}: ${detail}`.trim());
       } finally {
         setLoading(false);
       }

@@ -28,17 +28,28 @@ public class CheckoutService {
         AppUser user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + request.getUserId()));
 
+        // Auto-fill customer email from user account if not provided
+        String customerEmail = (request.getCustomerEmail() != null && !request.getCustomerEmail().isBlank())
+                ? request.getCustomerEmail()
+                : user.getCorreo();
+
+        String customerName = (request.getCustomerName() != null && !request.getCustomerName().isBlank())
+                ? request.getCustomerName()
+                : user.getNombre();
+
         Order order = Order.builder()
                 .user(user)
                 .orderNumber("PENDING") // Will update after first save
-                .customerName(request.getCustomerName())
-                .customerEmail(request.getCustomerEmail())
+                .customerName(customerName)
+                .customerEmail(customerEmail)
                 .customerPhone(request.getCustomerPhone())
                 .metodoPago(request.getMetodoPago())
                 .status(OrderStatus.PENDING)
                 .total(BigDecimal.ZERO)
                 .notas(request.getNotas())
                 .build();
+
+        log.info("Procesando checkout para usuario {} | email: {} | nombre: {}", user.getId(), customerEmail, customerName);
 
         BigDecimal total = BigDecimal.ZERO;
 

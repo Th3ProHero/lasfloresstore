@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiPackage, FiCalendar, FiDollarSign, FiClock, FiChevronRight, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiPackage, FiCalendar, FiDollarSign, FiClock, FiChevronRight, FiCheckCircle, FiAlertCircle, FiRefreshCw, FiX } from 'react-icons/fi';
 import { getUserOrders } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
@@ -9,30 +9,29 @@ const OrderHistoryPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [expandedId, setExpandedId] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const data = await getUserOrders(user.userId);
-        setOrders(data);
-      } catch (err) {
-        const status = err?.response?.status;
-        const detail = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Error desconocido';
-        console.error('[OrderHistoryPage] Error al cargar pedidos:', {
-          status,
-          detail,
-          fullError: err
-        });
-        setError(`Error ${status || ''}: ${detail}`.trim());
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user?.userId) {
-      fetchOrders();
+  const fetchOrders = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true); else setLoading(true);
+    setError('');
+    try {
+      const data = await getUserOrders(user.userId);
+      setOrders(data);
+    } catch (err) {
+      const status = err?.response?.status;
+      const detail = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Error desconocido';
+      console.error('[OrderHistoryPage] Error al cargar pedidos:', { status, detail, fullError: err });
+      setError(`Error ${status || ''}: ${detail}`.trim());
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user?.userId) fetchOrders();
+  }, [user, fetchOrders]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -64,7 +63,7 @@ const OrderHistoryPage = () => {
   return (
     <div className="min-h-screen bg-[#fdfcf8] py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
-        <header className="mb-12 text-center">
+        <header className="mb-12 text-center relative">
           <motion.h1 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -74,6 +73,14 @@ const OrderHistoryPage = () => {
           </motion.h1>
           <p className="text-gray-500 uppercase tracking-widest text-sm font-sans font-bold">Historial de tus compras</p>
           <div className="mt-4 w-24 h-1 bg-[#d4af37] mx-auto rounded-full opacity-50"></div>
+          <button
+            onClick={() => fetchOrders(true)}
+            disabled={refreshing}
+            className="absolute right-0 top-0 flex items-center gap-2 text-xs font-bold text-[#4a5d4e] bg-white border border-[#e0d0b0] rounded-xl px-3 py-2 hover:bg-[#f4efdf] transition-all disabled:opacity-50"
+          >
+            <FiRefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Actualizando...' : 'Actualizar'}
+          </button>
         </header>
 
         {error && (
@@ -96,65 +103,106 @@ const OrderHistoryPage = () => {
             </a>
           </motion.div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <AnimatePresence>
-              {orders.map((order, index) => (
-                <motion.div
-                  key={order.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-white rounded-2xl shadow-sm border border-[#e0d0b0]/20 hover:shadow-md transition-shadow overflow-hidden group"
-                >
-                  <div className="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="flex-1 space-y-4">
-                      <div className="flex items-center flex-wrap gap-3">
-                        <span className="text-lg font-bold text-[#4a5d4e] tracking-tight">{order.orderNumber}</span>
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border flex items-center ${getStatusColor(order.status)}`}>
-                          {getStatusIcon(order.status)}
-                          {order.status}
-                        </span>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <FiCalendar className="mr-2 text-[#d4af37]" />
-                          {new Date(order.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })}
+              {orders.map((order, index) => {
+                const isOpen = expandedId === order.id;
+                return (
+                  <motion.div
+                    key={order.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.07 }}
+                    className="bg-white rounded-2xl shadow-sm border border-[#e0d0b0]/20 hover:shadow-md transition-shadow overflow-hidden"
+                  >
+                    {/* ─ Card Header (always visible, clickable) ─ */}
+                    <button
+                      className="w-full text-left p-6 md:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4 group"
+                      onClick={() => setExpandedId(isOpen ? null : order.id)}
+                    >
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-center flex-wrap gap-3">
+                          <span className="text-lg font-bold text-[#4a5d4e] tracking-tight">{order.orderNumber}</span>
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border flex items-center ${getStatusColor(order.status)}`}>
+                            {getStatusIcon(order.status)}
+                            {order.status === 'CONFIRMED' ? 'Confirmado'
+                              : order.status === 'PENDING' ? 'Pendiente'
+                              : order.status === 'DELIVERED' ? 'Entregado'
+                              : order.status === 'CANCELLED' ? 'Cancelado' : order.status}
+                          </span>
                         </div>
-                        <div className="flex items-center">
-                          <FiDollarSign className="mr-1 text-[#d4af37]" />
-                          <span className="text-gray-900 font-bold font-sans">${order.total.toFixed(2)}</span>
-                        </div>
-                        <div className="flex items-center italic">
-                          {order.metodoPago}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="md:border-l border-gray-100 md:pl-8 flex flex-col items-center justify-center min-w-[140px]">
-                      <span className="text-xs text-gray-400 mb-2 uppercase font-bold tracking-tighter">Artículos</span>
-                      <div className="flex -space-x-2">
-                        {order.items.slice(0, 3).map((item, i) => (
-                          <div key={i} className="w-8 h-8 rounded-full bg-[#f4efdf] border-2 border-white flex items-center justify-center text-[10px] font-bold text-[#4a5d4e]">
-                            {item.productName.charAt(0)}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm text-gray-500">
+                          <div className="flex items-center">
+                            <FiCalendar className="mr-2 text-[#d4af37]" />
+                            {new Date(order.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}
                           </div>
-                        ))}
-                        {order.items.length > 3 && (
-                          <div className="w-8 h-8 rounded-full bg-gray-50 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-400">
-                            +{order.items.length - 3}
+                          <div className="flex items-center">
+                            <FiDollarSign className="mr-1 text-[#d4af37]" />
+                            <span className="text-gray-900 font-bold">${order.total.toFixed(2)}</span>
                           </div>
-                        )}
+                          <div className="flex items-center italic">{order.metodoPago}</div>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center">
-                      <button className="p-3 bg-gray-50 rounded-xl group-hover:bg-[#4a5d4e] group-hover:text-white transition-all text-[#4a5d4e]">
-                        <FiChevronRight className="text-xl" />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                      {/* Avatars de productos */}
+                      <div className="flex items-center gap-4">
+                        <div className="flex -space-x-2">
+                          {order.items.slice(0, 3).map((item, i) => (
+                            <div key={i} className="w-8 h-8 rounded-full bg-[#f4efdf] border-2 border-white flex items-center justify-center text-[10px] font-bold text-[#4a5d4e]">
+                              {item.productName.charAt(0)}
+                            </div>
+                          ))}
+                          {order.items.length > 3 && (
+                            <div className="w-8 h-8 rounded-full bg-gray-50 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-400">
+                              +{order.items.length - 3}
+                            </div>
+                          )}
+                        </div>
+                        <div className={`p-2 rounded-xl transition-all duration-300 ${isOpen ? 'bg-[#4a5d4e] text-white rotate-90' : 'bg-gray-50 text-[#4a5d4e] group-hover:bg-[#4a5d4e] group-hover:text-white'}`}>
+                          <FiChevronRight className="text-lg" />
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* ─ Expandable detail ─ */}
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.div
+                          key="detail"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: 'easeInOut' }}
+                          className="overflow-hidden"
+                        >
+                          <div className="border-t border-[#e0d0b0]/40 mx-6 md:mx-8 pt-5 pb-6 space-y-4">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Artículos del pedido</p>
+                            <div className="space-y-2">
+                              {order.items.map((item, i) => (
+                                <div key={i} className="flex items-center justify-between text-sm py-2 border-b border-dashed border-gray-100 last:border-0">
+                                  <div>
+                                    <span className="font-semibold text-[#4a5d4e] mr-2">{item.cantidad}x</span>
+                                    <span className="text-gray-700">{item.productName}</span>
+                                    {item.variantSabor && (
+                                      <span className="ml-2 text-[11px] italic text-gray-400">({item.variantSabor})</span>
+                                    )}
+                                  </div>
+                                  <span className="font-bold text-gray-800">${(item.precioUnitario * item.cantidad).toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
+                            {order.notas && (
+                              <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 text-sm text-amber-800 italic">
+                                <span className="font-semibold not-italic">📝 Notas: </span>{order.notas}
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                );
+              })}
             </AnimatePresence>
           </div>
         )}

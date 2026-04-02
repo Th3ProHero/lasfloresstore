@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiPackage, FiCalendar, FiDollarSign, FiClock, FiChevronRight, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
-import axios from 'axios';
+import { getUserOrders } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
 const OrderHistoryPage = () => {
@@ -13,11 +13,8 @@ const OrderHistoryPage = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`http://localhost:8080/api/orders/user/${user.userId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setOrders(response.data);
+        const data = await getUserOrders(user.userId);
+        setOrders(data);
       } catch (err) {
         const status = err?.response?.status;
         const detail = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Error desconocido';

@@ -1,94 +1,454 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">Pedido Las Flores</title>
     <style>
-        body { font-family: 'Georgia', serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9f7f2; }
-        .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e0d0b0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .header { background-color: #4a5d4e; color: #f9f7f2; text-align: center; padding: 30px; border-bottom: 5px solid #d4af37; }
-        .header h1 { margin: 0; font-size: 28px; letter-spacing: 2px; text-transform: uppercase; }
-        .header p { margin: 5px 0 0; opacity: 0.9; font-style: italic; }
-        .content { padding: 30px; }
-        .order-meta { margin-bottom: 25px; border-bottom: 1px dashed #ccc; padding-bottom: 15px; }
-        .order-meta p { margin: 5px 0; }
-        .order-meta strong { color: #4a5d4e; }
-        .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        .items-table th { text-align: left; background-color: #f4efdf; padding: 12px; border-bottom: 2px solid #4a5d4e; font-size: 14px; text-transform: uppercase; }
-        .items-table td { padding: 12px; border-bottom: 1px solid #ebebeb; vertical-align: top; }
-        .total-section { text-align: right; margin-top: 20px; font-size: 18px; color: #4a5d4e; }
-        .total-amount { font-weight: bold; font-size: 24px; color: #d4af37; }
-        .footer { background-color: #f4efdf; text-align: center; padding: 20px; font-size: 12px; color: #777; border-top: 1px solid #e0d0b0; }
-        .btn { display: inline-block; padding: 12px 25px; background-color: #4a5d4e; color: #fff; text-decoration: none; border-radius: 4px; margin-top: 20px; font-weight: bold; }
-        .status-pill { display: inline-block; padding: 4px 10px; border-radius: 20px; background-color: #fff9c4; color: #f57f17; font-size: 12px; font-weight: bold; text-transform: uppercase; }
-        .admin-note { background-color: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; margin-top: 20px; font-style: italic; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f1e8;
+            color: #3a3a3a;
+            -webkit-font-smoothing: antialiased;
+        }
+        .wrapper {
+            width: 100%;
+            padding: 40px 16px;
+            background-color: #f5f1e8;
+        }
+        .email-card {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.09);
+        }
+
+        /* ── HEADER ── */
+        .header {
+            background: linear-gradient(135deg, #3d5140 0%, #4a5d4e 60%, #5a7260 100%);
+            padding: 40px 32px 32px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -30px; right: -30px;
+            width: 140px; height: 140px;
+            background: rgba(212,175,55,0.12);
+            border-radius: 50%;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -40px; left: -20px;
+            width: 100px; height: 100px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        .header-flor {
+            font-size: 42px;
+            display: block;
+            margin-bottom: 12px;
+            line-height: 1;
+        }
+        .header h1 {
+            color: #fff;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .header .subtitle {
+            color: rgba(255,255,255,0.7);
+            font-size: 13px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .gold-bar {
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #d4af37, #f0d060, #d4af37, transparent);
+        }
+
+        /* ── BODY ── */
+        .body-pad {
+            padding: 32px 32px 8px;
+        }
+        .greeting {
+            font-size: 17px;
+            color: #3a3a3a;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        .greeting strong {
+            color: #4a5d4e;
+        }
+
+        /* ── ORDER HERO ── */
+        .order-hero {
+            background: linear-gradient(135deg, #f9f6ee, #f0ead8);
+            border: 1px solid #e0d0a0;
+            border-radius: 12px;
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            gap: 12px;
+        }
+        .order-hero-left .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #8a7a5a;
+            font-weight: 700;
+        }
+        .order-hero-left .order-num {
+            font-size: 22px;
+            font-weight: 800;
+            color: #4a5d4e;
+            letter-spacing: 1px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+        .status-confirmed { background: #d1f0d8; color: #1d6a35; }
+        .status-pending   { background: #fff4d0; color: #8a6200; }
+        .status-cancelled { background: #ffe0de; color: #8a1a1a; }
+        .status-delivered { background: #d0eeff; color: #0a5a8a; }
+
+        /* ── META (date, payment) ── */
+        .meta-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .meta-chip {
+            flex: 1;
+            background: #f9f7f3;
+            border: 1px solid #eae5d8;
+            border-radius: 10px;
+            padding: 12px 16px;
+            text-align: center;
+        }
+        .meta-chip .mc-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #9a8a6a;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .meta-chip .mc-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #3a3a3a;
+        }
+
+        /* ── SECTION TITLES ── */
+        .section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #8a7a5a;
+            font-weight: 700;
+            border-bottom: 1px solid #ece8da;
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+        }
+
+        /* ── ITEMS ── */
+        .items-wrap {
+            margin-bottom: 24px;
+        }
+        .item-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px dashed #ece8da;
+        }
+        .item-row:last-child { border-bottom: none; }
+        .item-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, #4a5d4e, #5a7260);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            color: white;
+            font-weight: 800;
+        }
+        .item-details { flex: 1; }
+        .item-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2a2a2a;
+            margin-bottom: 2px;
+        }
+        .item-variant {
+            font-size: 11px;
+            color: #8a7a6a;
+            font-style: italic;
+        }
+        .item-qty-price {
+            text-align: right;
+        }
+        .item-price {
+            font-size: 15px;
+            font-weight: 700;
+            color: #4a5d4e;
+        }
+        .item-qty {
+            font-size: 11px;
+            color: #9a8a7a;
+        }
+
+        /* ── TOTAL BLOCK ── */
+        .total-block {
+            background: linear-gradient(135deg, #4a5d4e, #3d5140);
+            border-radius: 12px;
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .total-block .tl { color: rgba(255,255,255,0.75); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; }
+        .total-block .tv { color: #f0d060; font-size: 28px; font-weight: 800; }
+
+        /* ── CUSTOMER INFO ── */
+        .customer-card {
+            background: #f9f7f3;
+            border: 1px solid #eae5d8;
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 24px;
+        }
+        .customer-row {
+            display: flex;
+            gap: 8px;
+            font-size: 13px;
+            margin-bottom: 6px;
+            align-items: flex-start;
+        }
+        .customer-row:last-child { margin-bottom: 0; }
+        .customer-row .cr-label { color: #8a7a5a; font-weight: 600; min-width: 70px; }
+        .customer-row .cr-value { color: #3a3a3a; }
+
+        /* ── NOTES ── */
+        .notes-box {
+            background: #fffdf5;
+            border: 1px dashed #d4c48a;
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #6a5a3a;
+            font-style: italic;
+        }
+        .notes-box strong { font-style: normal; color: #4a3a1a; }
+
+        /* ── ADMIN NOTE ── */
+        .admin-box {
+            background: #fff8e6;
+            border-left: 4px solid #d4af37;
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #6a4e00;
+        }
+
+        /* ── CTA ── */
+        .cta-wrap {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .cta-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #4a5d4e, #3d5140);
+            color: #fff;
+            text-decoration: none;
+            padding: 13px 32px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── FOOTER ── */
+        .footer {
+            background: #f0ead8;
+            border-top: 1px solid #e0d8c0;
+            padding: 24px 32px;
+            text-align: center;
+        }
+        .footer .store-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #4a5d4e;
+            margin-bottom: 4px;
+        }
+        .footer .footer-sub {
+            font-size: 11px;
+            color: #9a8a6a;
+            letter-spacing: 0.5px;
+        }
+        .divider { height: 1px; background: linear-gradient(90deg, transparent, #d0c0a0, transparent); margin: 14px 0; }
+
+        /* Responsive */
+        @media (max-width: 540px) {
+            .body-pad { padding: 24px 20px 8px; }
+            .footer { padding: 20px; }
+            .order-hero { flex-direction: column; text-align: center; }
+            .meta-row { flex-direction: column; }
+            .total-block { flex-direction: column; gap: 4px; text-align: center; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1 th:text="${isAdmin} ? 'NUEVA ORDEN RECIBIDA' : 'DETALLE DE TU PEDIDO'">ORDEN RECIBIDA</h1>
-            <p>Las Flores Store</p>
-        </div>
-        
-        <div class="content">
-            <div class="order-meta">
-                <p><strong>Número de Folio:</strong> <span th:text="${order.orderNumber}">FLORES-0000</span></p>
-                <p><strong>Fecha:</strong> <span th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024</span></p>
-                <p><strong>Estatus:</strong> <span class="status-pill" th:text="${order.status}">PENDIENTE</span></p>
-            </div>
+<div class="wrapper">
+  <div class="email-card">
 
-            <p th:if="${!isAdmin}">Hola <strong th:text="${order.customerName}">Cliente</strong>, gracias por tu compra. Aquí tienes los detalles de tu pedido:</p>
-            <p th:if="${isAdmin}">Se ha recibido una nueva orden de: <strong th:text="${order.customerName}">Cliente</strong>.</p>
-            
-            <p><strong>Entregar a:</strong> <span th:text="${order.customerName}">Nombre</span><br/>
-            <strong>Email:</strong> <span th:text="${order.customerEmail}">correo@ejemplo.com</span><br/>
-            <strong>Teléfono:</strong> <span th:text="${order.customerPhone != null ? order.customerPhone : 'No proporcionado'}">555-555</span></p>
-            
-            <p th:if="${order.notas != null && !order.notas.empty}">
-                <strong>Notas:</strong> <span th:text="${order.notas}">Notas del pedido</span>
-            </p>
-
-            <table class="items-table">
-                <thead>
-                    <tr>
-                        <th>Artículo</th>
-                        <th>Cant.</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="item : ${order.items}">
-                        <td>
-                            <strong th:text="${item.productName}">Producto</strong><br/>
-                            <small th:if="${item.variantSabor != null}" th:text="'Sabor: ' + ${item.variantSabor}"></small>
-                        </td>
-                        <td th:text="${item.cantidad}">1</td>
-                        <td th:text="'$' + ${item.subtotal}">$0.00</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="total-section">
-                <span>TOTAL:</span>
-                <span class="total-amount" th:text="'$' + ${order.total}">$0.00</span>
-                <p><small>Método de Pago: </small><strong th:text="${order.metodoPago}">SPEI</strong></p>
-            </div>
-
-            <div th:if="${isAdmin}" class="admin-note">
-                <p>Para gestionar esta orden y ver más información, ingresa al panel de administración.</p>
-            </div>
-            
-            <div th:if="${!isAdmin}" style="text-align: center;">
-                <p>Si tienes alguna duda con tu pedido, por favor contáctanos.</p>
-                <a href="#" class="btn">Ver mi pedido</a>
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p>&copy; 2024 Las Flores Store - Abarrotes & Más</p>
-            <p>Este es un correo automático, por favor no respondas.</p>
-        </div>
+    <!-- HEADER -->
+    <div class="header">
+      <span class="header-flor">🌸</span>
+      <h1 th:text="${isAdmin} ? 'Nueva Orden Recibida' : 'Tu Pedido Está Confirmado'">Pedido</h1>
+      <p class="subtitle">Las Flores · Abarrotes &amp; Más</p>
     </div>
+    <div class="gold-bar"></div>
+
+    <!-- BODY -->
+    <div class="body-pad">
+
+      <!-- Greeting -->
+      <p class="greeting" th:if="${!isAdmin}">
+        Hola <strong th:text="${order.customerName}">Cliente</strong>,<br>
+        gracias por tu compra. Tu pedido fue recibido exitosamente y está siendo procesado. 🎉
+      </p>
+      <p class="greeting" th:if="${isAdmin}">
+        Se ha generado una nueva orden de <strong th:text="${order.customerName}">Cliente</strong>.
+        Revisa los detalles a continuación.
+      </p>
+
+      <!-- Order hero -->
+      <div class="order-hero">
+        <div class="order-hero-left">
+          <div class="label">Número de Folio</div>
+          <div class="order-num" th:text="${order.orderNumber}">FLORES-0001</div>
+        </div>
+        <div>
+          <span class="status-badge status-confirmed"
+                th:classappend="${order.status.name() == 'CONFIRMED'} ? 'status-confirmed'
+                               : (${order.status.name() == 'PENDING'} ? 'status-pending'
+                               : (${order.status.name() == 'CANCELLED'} ? 'status-cancelled'
+                               : 'status-delivered'))"
+                th:text="${order.status.name() == 'CONFIRMED'} ? '✓ Confirmado'
+                         : (${order.status.name() == 'PENDING'} ? '⏳ Pendiente'
+                         : (${order.status.name() == 'CANCELLED'} ? '✕ Cancelado'
+                         : '📦 Entregado'))">
+            ✓ Confirmado
+          </span>
+        </div>
+      </div>
+
+      <!-- Meta chips -->
+      <div class="meta-row">
+        <div class="meta-chip">
+          <span class="mc-label">📅 Fecha</span>
+          <span class="mc-value" th:text="${#temporals.format(order.createdAt, 'dd MMM yyyy HH:mm')}">01 Jan 2024</span>
+        </div>
+        <div class="meta-chip">
+          <span class="mc-label">💳 Pago</span>
+          <span class="mc-value" th:text="${order.metodoPago}">EFECTIVO</span>
+        </div>
+      </div>
+
+      <!-- Items -->
+      <div class="items-wrap">
+        <div class="section-title">🛒 Artículos del Pedido</div>
+        <div th:each="item : ${order.items}" class="item-row">
+          <div class="item-icon" th:text="${#strings.substring(item.productName, 0, 1)}">P</div>
+          <div class="item-details">
+            <div class="item-name" th:text="${item.productName}">Producto</div>
+            <div class="item-variant" th:if="${item.variantSabor != null}"
+                 th:text="'Variedad: ' + ${item.variantSabor}">Sabor</div>
+          </div>
+          <div class="item-qty-price">
+            <div class="item-price" th:text="'$' + ${#numbers.formatDecimal(item.subtotal, 1, 2)}">$0.00</div>
+            <div class="item-qty" th:text="${item.cantidad} + ' ud.'">1 ud.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total -->
+      <div class="total-block">
+        <span class="tl">Total a Pagar</span>
+        <span class="tv" th:text="'$' + ${#numbers.formatDecimal(order.total, 1, 2)}">$0.00</span>
+      </div>
+
+      <!-- Customer info -->
+      <div class="customer-card">
+        <div class="section-title">👤 Datos del Cliente</div>
+        <div class="customer-row">
+          <span class="cr-label">Nombre:</span>
+          <span class="cr-value" th:text="${order.customerName}">—</span>
+        </div>
+        <div class="customer-row" th:if="${order.customerEmail != null}">
+          <span class="cr-label">Correo:</span>
+          <span class="cr-value" th:text="${order.customerEmail}">—</span>
+        </div>
+        <div class="customer-row" th:if="${order.customerPhone != null}">
+          <span class="cr-label">Teléfono:</span>
+          <span class="cr-value" th:text="${order.customerPhone}">—</span>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="notes-box" th:if="${order.notas != null and !order.notas.empty}">
+        <strong>📝 Notas del pedido:</strong><br/>
+        <span th:text="${order.notas}">Sin notas.</span>
+      </div>
+
+      <!-- CTA for customer -->
+      <div class="cta-wrap" th:if="${!isAdmin}">
+        <p style="font-size:13px; color:#8a7a6a; margin-bottom:14px;">
+          ¿Tienes alguna duda con tu pedido? Escríbenos con el número de folio.
+        </p>
+        <a href="#" class="cta-btn">Ver Mis Pedidos</a>
+      </div>
+
+      <!-- Admin note -->
+      <div class="admin-box" th:if="${isAdmin}">
+        💡 Para gestionar esta orden ingresa al <strong>Panel de Administración</strong> y busca el folio
+        <strong th:text="${order.orderNumber}">FLORES-0001</strong>.
+      </div>
+
+    </div><!-- /body-pad -->
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <div class="store-name">🌸 Las Flores · Abarrotes &amp; Más</div>
+      <div class="divider"></div>
+      <div class="footer-sub">Este es un correo automático, por favor no respondas directamente.<br>© 2024 Las Flores Store. Todos los derechos reservados.</div>
+    </div>
+
+  </div><!-- /email-card -->
+</div><!-- /wrapper -->
 </body>
 </html>

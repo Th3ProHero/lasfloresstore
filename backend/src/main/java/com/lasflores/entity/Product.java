@@ -18,6 +18,9 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "codigo", unique = true)
+    private String codigo;
+
     @Column(nullable = false)
     private String nombre;
 
@@ -77,6 +80,13 @@ public class Product {
             return precio.multiply(factor).setScale(2, java.math.RoundingMode.HALF_UP);
         }
         return precio;
+    }
+
+    @PostPersist
+    protected void onPostPersist() {
+        if (this.codigo == null) {
+            this.codigo = String.format("PROD-%03d", this.id);
+        }
     }
 
     @PreUpdate

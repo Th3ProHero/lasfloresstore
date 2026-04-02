@@ -138,6 +138,7 @@ public class ProductService {
     private ProductDTO toDTO(Product p) {
         return ProductDTO.builder()
                 .id(p.getId())
+                .codigo(p.getCodigo())
                 .nombre(p.getNombre())
                 .marca(p.getMarca())
                 .precio(p.getPrecio())

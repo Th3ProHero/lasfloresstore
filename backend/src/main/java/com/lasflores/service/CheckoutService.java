@@ -11,11 +11,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class CheckoutService {
+
+    private static final Map<Integer, String> MES = Map.ofEntries(
+        Map.entry(1, "EN"), Map.entry(2, "FE"), Map.entry(3, "MA"),
+        Map.entry(4, "AB"), Map.entry(5, "MY"), Map.entry(6, "JN"),
+        Map.entry(7, "JL"), Map.entry(8, "AG"), Map.entry(9, "SE"),
+        Map.entry(10, "OC"), Map.entry(11, "NO"), Map.entry(12, "DC")
+    );
 
     private final ProductRepository productRepository;
     private final ProductVariantRepository variantRepository;
@@ -134,10 +143,11 @@ public class CheckoutService {
         // Save order to get ID
         Order savedOrder = orderRepository.save(order);
 
-        // Generate order number
+        // Generate order number: FLOR-{MM}-0001 / FLOR-{MM}-EV-0001
+        String mm = getMesAbrev();
         String orderNumber = esEspecial
-                ? String.format("FLORES-EVENT-%04d", savedOrder.getId())
-                : String.format("FLORES-%04d", savedOrder.getId());
+                ? String.format("FLOR-%s-EV-%04d", mm, savedOrder.getId())
+                : String.format("FLOR-%s-%04d", mm, savedOrder.getId());
         savedOrder.setOrderNumber(orderNumber);
         savedOrder = orderRepository.save(savedOrder);
 
@@ -167,5 +177,10 @@ public class CheckoutService {
                 .message(message)
                 .createdAt(savedOrder.getCreatedAt())
                 .build();
+    }
+
+    /** Returns the 2-letter Spanish month abbreviation for the current month */
+    private String getMesAbrev() {
+        return MES.getOrDefault(LocalDate.now().getMonthValue(), "XX");
     }
 }

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pedido Entregado</title>
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family: -apple-system,'Segoe UI',Arial,sans-serif; background:#f5f1e8; color:#3a3a3a; }
+    .wrapper { padding:40px 16px; }
+    .card { max-width:580px; margin:0 auto; background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.10); }
+
+    .header { background:linear-gradient(135deg,#1a6a3a,#2a9a5a); padding:32px 28px; text-align:center; }
+    .check { width:64px; height:64px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:32px; margin:0 auto 12px; }
+    .header h1 { color:#fff; font-size:22px; font-weight:800; }
+    .header p { color:rgba(255,255,255,0.75); font-size:12px; margin-top:4px; letter-spacing:1.5px; text-transform:uppercase; }
+    .green-bar { height:4px; background:linear-gradient(90deg,transparent,#4ade80,#86efac,#4ade80,transparent); }
+
+    .body { padding:28px 28px 8px; }
+
+    .folio { background:#f0faf4; border:1px solid #c0e8cc; border-radius:12px; padding:16px 20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+    .folio .num { font-size:20px; font-weight:900; color:#1a6a3a; }
+    .folio .badge { background:#dcfce7; color:#1a6a3a; font-size:11px; font-weight:700; padding:5px 12px; border-radius:20px; border:1px solid #c0e8cc; text-transform:uppercase; }
+
+    .greeting { font-size:15px; line-height:1.7; margin-bottom:20px; color:#3a3a3a; }
+
+    .sec-title { font-size:10px; text-transform:uppercase; letter-spacing:2px; color:#9a8060; font-weight:700; border-bottom:1px solid #ece8da; padding-bottom:8px; margin-bottom:12px; }
+    .item-row { display:flex; justify-content:space-between; font-size:13px; padding:8px 0; border-bottom:1px dashed #ece8da; color:#4a3a2a; }
+    .item-row:last-child { border-bottom:none; }
+
+    .total-block { background:linear-gradient(135deg,#1a6a3a,#2a9a5a); border-radius:12px; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; margin:16px 0 20px; flex-wrap:wrap; gap:8px; }
+    .total-block .tl { color:rgba(255,255,255,.75); font-size:12px; text-transform:uppercase; font-weight:700; }
+    .total-block .tv { color:#bbf7d0; font-size:24px; font-weight:900; }
+
+    .thanks { background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:16px 18px; margin-bottom:20px; text-align:center; }
+    .thanks p { font-size:14px; color:#4a4a4a; line-height:1.65; }
+
+    .footer { background:#f4edd8; border-top:1px solid #e0d8c0; padding:20px 28px; text-align:center; }
+    .footer p { font-size:11px; color:#9a8a6a; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="card">
+    <div class="header">
+      <div class="check">✅</div>
+      <h1>¡Tu Pedido fue Entregado!</h1>
+      <p>Las Flores · Confirmación de Entrega</p>
+    </div>
+    <div class="green-bar"></div>
+    <div class="body">
+
+      <div class="folio">
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#4a9a6a;font-weight:700;">Folio del Pedido</div>
+          <div class="num" th:text="${order.orderNumber}">FLOR-AB-0001</div>
+        </div>
+        <span class="badge">✅ Entregado</span>
+      </div>
+
+      <p class="greeting">
+        Hola <strong th:text="${order.customerName}">Cliente</strong>,<br><br>
+        Tu pedido ha sido marcado como <strong>entregado satisfactoriamente</strong> por nuestro equipo.
+        Esperamos que todo haya sido de tu agrado. ¡Gracias por confiar en Las Flores! 🌸
+      </p>
+
+      <div class="sec-title">🛒 Resumen de tu Pedido</div>
+      <div th:each="item : ${order.items}" class="item-row">
+        <span>
+          <strong th:text="${item.cantidad}">1</strong>x
+          <span th:text="${item.productName}">Producto</span>
+          <em th:if="${item.variantSabor != null}" th:text="' (' + ${item.variantSabor} + ')'" style="color:#8a7a6a;font-size:11px;"></em>
+        </span>
+        <span th:text="'$' + ${#numbers.formatDecimal(item.subtotal, 1, 2)}">$0.00</span>
+      </div>
+
+      <div class="total-block">
+        <span class="tl">Total Pagado</span>
+        <span class="tv" th:text="'$' + ${#numbers.formatDecimal(order.total, 1, 2)}">$0.00</span>
+      </div>
+
+      <div class="thanks">
+        <p>🌸 <strong>¡Muchas gracias por tu compra!</strong><br>
+        Tu preferencia nos motiva a seguir mejorando. Esperamos verte pronto en <strong>Abarrotes Las Flores</strong>.</p>
+      </div>
+
+    </div>
+    <div class="footer">
+      <p>🌸 Las Flores Store — Este correo es automático, por favor no respondas.<br>© 2024 Las Flores Store. Todos los derechos reservados.</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

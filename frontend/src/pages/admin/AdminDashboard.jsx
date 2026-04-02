@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { HiPlus, HiPhotograph, HiLogout, HiX, HiPencil, HiTrash, HiDocumentText, HiViewGrid } from 'react-icons/hi';
-import client, { getProducts, updateProduct, getAdminOrders, updateOrderStatus, getAllPromotions, createPromotion, updatePromotion, deletePromotion, getLegalContent, saveLegalContent } from '../../api/client';
+import client, { getProducts, updateProduct, getAdminOrders, updateOrderStatus, getAllPromotions, createPromotion, updatePromotion, deletePromotion, getLegalContent, saveLegalContent, getProductosEspeciales } from '../../api/client';
 import { HiFire, HiOutlineDocumentText } from 'react-icons/hi';
 
 const CATEGORIAS = [
@@ -66,8 +66,17 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const { content } = await getProducts({ size: 100, sortBy: 'id', direction: 'desc' });
-      setProducts(content || []);
+      // Cargar todos los productos: regulares + especiales
+      const [regularData, especialData] = await Promise.all([
+        getProducts({ size: 200, sortBy: 'id', direction: 'desc' }),
+        getProductosEspeciales({ size: 200 }),
+      ]);
+      // Merge y ordenar por id desc
+      const allProducts = [
+        ...(regularData.content || []),
+        ...(especialData.content || []),
+      ].sort((a, b) => b.id - a.id);
+      setProducts(allProducts);
 
       const ordersData = await getAdminOrders();
       setOrders(ordersData || []);
@@ -87,12 +96,25 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleStatusChange = async (orderId, newStatus) => {
+  const handleStatusChange = async (orderId, newStatus, currentStatus) => {
+    // Guard: cannot change locked orders
+    const LOCKED = ['DELIVERED', 'COMPLETED', 'CANCELLED'];
+    if (LOCKED.includes(currentStatus)) return;
+
+    // Require explicit confirmation for DELIVERED
+    if (newStatus === 'DELIVERED') {
+      const order = orders.find(o => o.id === orderId);
+      const confirmed = window.confirm(
+        `¿Confirmar entrega del pedido ${order?.orderNumber || '#' + orderId}?\n\nEsta acción es DEFINITIVA y no podrá cambiarse. Se enviará un correo de confirmación al cliente.`
+      );
+      if (!confirmed) return;
+    }
+
     try {
       await updateOrderStatus(orderId, newStatus);
       fetchDashboardData();
     } catch (err) {
-      alert('Error actualizando estado del pedido');
+      alert(err.response?.data?.message || 'Error actualizando estado del pedido');
     }
   };
 
@@ -367,6 +389,7 @@ export default function AdminDashboard() {
                         <p className="font-semibold text-slate-dark">{p.nombre}</p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <p className="text-xs text-slate-light">{p.marca}</p>
+                          {p.codigo && <span className="text-[9px] font-bold text-slate-light bg-cream-100 px-1.5 py-0.5 rounded border border-cream-300">{p.codigo}</span>}
                           {p.esEspecial && (
                             <span className="text-[9px] font-bold uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full border border-amber-200">🎉 Especial</span>
                           )}
@@ -432,7 +455,9 @@ export default function AdminDashboard() {
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-dark">#{o.id}</span>
+                            <span className="font-bold text-slate-dark text-sm">
+                              {o.orderNumber || '#' + o.id}
+                            </span>
                             {o.tipoOrden === 'ESPECIAL' && (
                               <span className="text-[9px] font-bold uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full border border-amber-200">🎉 Evento</span>
                             )}
@@ -451,27 +476,36 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-6 py-4 text-center">
                           <div onClick={(e) => e.stopPropagation()}>
-                            <select 
-                              value={o.status}
-                              onChange={(e) => handleStatusChange(o.id, e.target.value)}
-                              className={`px-3 py-1.5 rounded-lg font-bold text-xs cursor-pointer border-0 outline-none ring-2 focus:ring-sage ${
-                                o.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700 ring-yellow-300'
-                                : o.status === 'AWAITING_CONFIRMATION' ? 'bg-orange-100 text-orange-700 ring-orange-300'
-                                : o.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-700 ring-blue-300'
-                                : o.status === 'PROCESSING' ? 'bg-purple-100 text-purple-700 ring-purple-300'
-                                : o.status === 'DELIVERED' ? 'bg-teal-100 text-teal-700 ring-teal-300'
-                                : o.status === 'COMPLETED' ? 'bg-green-100 text-green-700 ring-green-300'
-                                : 'bg-red-100 text-red-700 ring-red-300'
-                              }`}
-                            >
-                              <option value="PENDING">⏳ PENDIENTE</option>
-                              <option value="AWAITING_CONFIRMATION">🏪 ESPERA CONFIRMACIÓN</option>
-                              <option value="CONFIRMED">✅ CONFIRMADO</option>
-                              <option value="PROCESSING">📦 PREPARANDO</option>
-                              <option value="DELIVERED">🚚 ENTREGADO</option>
-                              <option value="COMPLETED">🌟 COMPLETADO</option>
-                              <option value="CANCELLED">❌ CANCELADO</option>
-                            </select>
+                            {['DELIVERED', 'COMPLETED', 'CANCELLED'].includes(o.status) ? (
+                              <span className={`inline-block px-3 py-1.5 rounded-lg font-bold text-xs ${
+                                o.status === 'DELIVERED' ? 'bg-teal-100 text-teal-700'
+                                : o.status === 'COMPLETED' ? 'bg-green-100 text-green-700'
+                                : 'bg-red-100 text-red-700'
+                              }`}>
+                                {o.status === 'DELIVERED' ? '🚚 ENTREGADO'
+                                  : o.status === 'COMPLETED' ? '🌟 COMPLETADO'
+                                  : '❌ CANCELADO'}
+                                <span className="ml-1 text-[9px] opacity-60">🔒</span>
+                              </span>
+                            ) : (
+                              <select
+                                value={o.status}
+                                onChange={(e) => handleStatusChange(o.id, e.target.value, o.status)}
+                                className={`px-3 py-1.5 rounded-lg font-bold text-xs cursor-pointer border-0 outline-none ring-2 focus:ring-sage ${
+                                  o.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700 ring-yellow-300'
+                                  : o.status === 'AWAITING_CONFIRMATION' ? 'bg-orange-100 text-orange-700 ring-orange-300'
+                                  : o.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-700 ring-blue-300'
+                                  : 'bg-purple-100 text-purple-700 ring-purple-300'
+                                }`}
+                              >
+                                <option value="PENDING">⏳ PENDIENTE</option>
+                                <option value="AWAITING_CONFIRMATION">🏪 ESPERA CONFIRMACIÓN</option>
+                                <option value="CONFIRMED">✅ CONFIRMADO</option>
+                                <option value="PROCESSING">📦 PREPARANDO</option>
+                                <option value="DELIVERED">🚚 ENTREGAR (DEFINITIVO)</option>
+                                <option value="CANCELLED">❌ CANCELAR (DEFINITIVO)</option>
+                              </select>
+                            )}
                           </div>
                         </td>
                       </tr>

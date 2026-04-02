@@ -115,6 +115,22 @@ public class EmailService {
         }
     }
 
+    @Async
+    public void sendDeliveryConfirmation(Order order) {
+        if (order.getCustomerEmail() == null || order.getCustomerEmail().isBlank()) return;
+        try {
+            Context context = new Context();
+            context.setVariable("order", order);
+            context.setVariable("title", "Tu pedido fue entregado - " + order.getOrderNumber());
+            String process = templateEngine.process("delivery-confirmation-email", context);
+            sendHtmlEmail(order.getCustomerEmail(),
+                    "✅ Pedido Entregado: " + order.getOrderNumber() + " - Las Flores", process);
+            log.info("Email de entrega enviado a {}", order.getCustomerEmail());
+        } catch (Exception e) {
+            log.error("Error al enviar email de entrega: {}", e.getMessage());
+        }
+    }
+
     private void sendHtmlEmail(String to, String subject, String htmlBody) throws MessagingException {
         MimeMessage message = emailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");

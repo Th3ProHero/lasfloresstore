@@ -2,9 +2,11 @@ package com.lasflores.dto;
 
 import com.lasflores.entity.MetodoPago;
 import com.lasflores.entity.OrderStatus;
+import com.lasflores.entity.OrderTipo;
 import lombok.Builder;
 import lombok.Data;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,6 +14,7 @@ import java.util.List;
 @Builder
 public class OrderAdminDTO {
     private Long id;
+    private String orderNumber;
     private String customerName;
     private String customerEmail;
     private String customerPhone;
@@ -19,6 +22,9 @@ public class OrderAdminDTO {
     private OrderStatus status;
     private BigDecimal total;
     private String notas;
+    private OrderTipo tipoOrden;
+    private LocalDate fechaEvento;
+    private Integer cantidadPersonas;
     private LocalDateTime createdAt;
     private List<OrderItemDTO> items;
 

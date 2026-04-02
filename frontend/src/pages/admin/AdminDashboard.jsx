@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { HiPlus, HiPhotograph, HiLogout, HiX, HiPencil, HiTrash, HiDocumentText, HiViewGrid} from 'react-icons/hi';
+import { HiPlus, HiPhotograph, HiLogout, HiX, HiPencil, HiTrash, HiDocumentText, HiViewGrid } from 'react-icons/hi';
 import client, { getProducts, updateProduct, getAdminOrders, updateOrderStatus, getAllPromotions, createPromotion, updatePromotion, deletePromotion, getLegalContent, saveLegalContent } from '../../api/client';
 import { HiFire, HiOutlineDocumentText } from 'react-icons/hi';
 
 const CATEGORIAS = [
   'BEBIDAS', 'LACTEOS', 'BOTANAS', 'LIMPIEZA', 'HIGIENE',
   'ENLATADOS', 'ABARROTES', 'DULCES', 'CONGELADOS',
-  'FRUTAS_VERDURAS', 'PANADERIA', 'MASCOTAS', 'CERVEZAS',
+  'SEMILLAS', 'PANADERIA', 'MASCOTAS', 'CERVEZAS',
   'MEDICAMENTOS', 'CREMERIA', 'DESECHABLES', 'SALSAS',
-  'ACEITES', 'VELAS'
+  'ACEITES', 'VELAS',
 ];
 
 export default function AdminDashboard() {
@@ -21,14 +21,14 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState([]);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [loading, setLoading] = useState(false);
-  
+
   // Estado del modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
   const initialFormState = {
-    nombre: '', marca: '', precio: '', categoria: 'ABARROTES', 
-    enOferta: false, porcentajeDescuento: 0,
+    nombre: '', marca: '', precio: '', categoria: 'ABARROTES',
+    enOferta: false, esEspecial: false, porcentajeDescuento: 0,
     numInventario: '', descripcion: '', imagenUrl: ''
   };
 
@@ -45,7 +45,7 @@ export default function AdminDashboard() {
   };
   const [promoForm, setPromoForm] = useState(initialPromoForm);
   const [promoPreview, setPromoPreview] = useState(null);
-  
+
   // Search dropdown
   const [productSearch, setProductSearch] = useState('');
   const [showProductDropdown, setShowProductDropdown] = useState(false);
@@ -68,13 +68,13 @@ export default function AdminDashboard() {
     try {
       const { content } = await getProducts({ size: 100, sortBy: 'id', direction: 'desc' });
       setProducts(content || []);
-      
+
       const ordersData = await getAdminOrders();
       setOrders(ordersData || []);
 
       const promoData = await getAllPromotions();
       setPromotions(promoData || []);
-      
+
       const legalData = await getLegalContent(legalDoc);
       if (legalData) {
         setLegalContent(legalData.content || '');
@@ -135,6 +135,7 @@ export default function AdminDashboard() {
       precio: p.precio || '',
       categoria: p.categoria || 'ABARROTES',
       enOferta: p.enOferta || false,
+      esEspecial: p.esEspecial || false,
       porcentajeDescuento: p.porcentajeDescuento || 0,
       numInventario: p.numInventario || '',
       descripcion: p.descripcion || '',
@@ -145,7 +146,7 @@ export default function AdminDashboard() {
   };
 
   const handleDelete = async (id) => {
-    if(!window.confirm('¿Seguro que deseas eliminar este producto?')) return;
+    if (!window.confirm('¿Seguro que deseas eliminar este producto?')) return;
     try {
       await client.delete('/products/' + id);
       fetchDashboardData();
@@ -207,16 +208,16 @@ export default function AdminDashboard() {
   const handleOpenPromoEdit = (p) => {
     setEditingPromoId(p.id);
     setPromoForm({
-       title: p.title || '',
-       description: p.description || '',
-       imageUrl: p.imageUrl || '',
-       startDate: p.startDate ? p.startDate.substring(0, 16) : '',
-       endDate: p.endDate ? p.endDate.substring(0, 16) : '',
-       isActive: p.isActive,
-       externalLink: p.externalLink || '',
-       priority: p.priority || 1,
-       productId: p.productId || null,
-       productName: p.productName || ''
+      title: p.title || '',
+      description: p.description || '',
+      imageUrl: p.imageUrl || '',
+      startDate: p.startDate ? p.startDate.substring(0, 16) : '',
+      endDate: p.endDate ? p.endDate.substring(0, 16) : '',
+      isActive: p.isActive,
+      externalLink: p.externalLink || '',
+      priority: p.priority || 1,
+      productId: p.productId || null,
+      productName: p.productName || ''
     });
     setPromoPreview(p.imageUrl || null);
     setProductSearch(p.productName || '');
@@ -224,7 +225,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeletePromo = async (id) => {
-    if(!window.confirm('¿Seguro que deseas eliminar esta promoción?')) return;
+    if (!window.confirm('¿Seguro que deseas eliminar esta promoción?')) return;
     try {
       await deletePromotion(id);
       fetchDashboardData();
@@ -249,7 +250,7 @@ export default function AdminDashboard() {
       }
       setIsPromoModal(false);
       fetchDashboardData();
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       alert('Error: ' + (err.response?.data?.message || err.response?.data?.error || err.message));
     } finally {
@@ -294,28 +295,28 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         {/* Sidebar Nav */}
         <nav className="flex gap-4 mb-8">
-          <button 
+          <button
             onClick={() => setActiveTab('productos')}
             className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all ${activeTab === 'productos' ? 'bg-sage text-white shadow-md' : 'bg-white text-slate-light hover:bg-cream-200 hover:text-slate-dark'}`}
           >
             <HiViewGrid className="w-5 h-5" />
             <span className="font-semibold text-sm">Inventario</span>
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('pedidos')}
             className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all ${activeTab === 'pedidos' ? 'bg-sage text-white shadow-md' : 'bg-white text-slate-light hover:bg-cream-200 hover:text-slate-dark'}`}
           >
             <HiDocumentText className="w-5 h-5" />
             <span className="font-semibold text-sm">Pedidos y Envíos</span>
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('promociones')}
             className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all ${activeTab === 'promociones' ? 'bg-sage text-white shadow-md' : 'bg-white text-slate-light hover:bg-cream-200 hover:text-slate-dark'}`}
           >
             <HiFire className="w-5 h-5" />
             <span className="font-semibold text-sm">Dinámicas</span>
           </button>
-          <button 
+          <button
             onClick={() => { setActiveTab('legales'); fetchDashboardData(); }}
             className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all ${activeTab === 'legales' ? 'bg-sage text-white shadow-md' : 'bg-white text-slate-light hover:bg-cream-200 hover:text-slate-dark'}`}
           >
@@ -328,7 +329,7 @@ export default function AdminDashboard() {
           <>
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display text-3xl font-bold text-slate-dark">Mis Productos</h2>
-              <button 
+              <button
                 onClick={handleOpenCreate}
                 className="flex items-center gap-2 bg-sage hover:bg-sage-dark text-white px-5 py-2.5 rounded-xl font-semibold shadow-md transition-all"
               >
@@ -354,17 +355,22 @@ export default function AdminDashboard() {
                   {products.map((p) => (
                     <tr key={p.id} className="border-b border-cream-200 hover:bg-cream-50 transition-colors">
                       <td className="px-6 py-4">
-                         {p.imagenUrl ? (
-                            <div className="w-12 h-12 bg-cream-200 rounded-lg overflow-hidden flex items-center justify-center">
-                              <img src={p.imagenUrl} alt={p.nombre} className="w-full h-full object-cover" />
-                            </div>
-                         ) : (
-                            <div className="w-12 h-12 bg-cream-200 rounded-lg flex items-center justify-center text-xl">📦</div>
-                         )}
+                        {p.imagenUrl ? (
+                          <div className="w-12 h-12 bg-cream-200 rounded-lg overflow-hidden flex items-center justify-center">
+                            <img src={p.imagenUrl} alt={p.nombre} className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 bg-cream-200 rounded-lg flex items-center justify-center text-xl">📦</div>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <p className="font-semibold text-slate-dark">{p.nombre}</p>
-                        <p className="text-xs">{p.marca}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-xs text-slate-light">{p.marca}</p>
+                          {p.esEspecial && (
+                            <span className="text-[9px] font-bold uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full border border-amber-200">🎉 Especial</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className="bg-terracotta/10 text-terracotta text-[10px] font-bold px-2 py-1 rounded-full uppercase">
@@ -372,22 +378,22 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td className="px-6 py-4 font-medium">
-                         {p.numInventario}
+                        {p.numInventario}
                       </td>
                       <td className="px-6 py-4 font-bold text-slate-dark">
                         <div className="flex flex-col">
-                           <span>${Number(p.precioFinal).toFixed(2)}</span>
-                           {p.enOferta && <span className="text-xs text-warmred">(-{p.porcentajeDescuento}%)</span>}
+                          <span>${Number(p.precioFinal).toFixed(2)}</span>
+                          {p.enOferta && <span className="text-xs text-warmred">(-{p.porcentajeDescuento}%)</span>}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                           <button onClick={() => handleOpenEdit(p)} className="p-2 bg-cream-200 hover:bg-terracotta hover:text-white rounded-lg transition-colors text-slate-dark" title="Editar">
-                             <HiPencil />
-                           </button>
-                           <button onClick={() => handleDelete(p.id)} className="p-2 bg-cream-200 hover:bg-warmred hover:text-white rounded-lg transition-colors text-slate-dark" title="Eliminar">
-                             <HiTrash />
-                           </button>
+                          <button onClick={() => handleOpenEdit(p)} className="p-2 bg-cream-200 hover:bg-terracotta hover:text-white rounded-lg transition-colors text-slate-dark" title="Editar">
+                            <HiPencil />
+                          </button>
+                          <button onClick={() => handleDelete(p.id)} className="p-2 bg-cream-200 hover:bg-warmred hover:text-white rounded-lg transition-colors text-slate-dark" title="Eliminar">
+                            <HiTrash />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -420,13 +426,21 @@ export default function AdminDashboard() {
                 <tbody>
                   {orders.map((o) => (
                     <React.Fragment key={o.id}>
-                      <tr 
+                      <tr
                         onClick={() => setExpandedOrderId(expandedOrderId === o.id ? null : o.id)}
                         className={`border-b border-cream-200 hover:bg-cream-100 transition-colors cursor-pointer ${expandedOrderId === o.id ? 'bg-cream-50' : ''}`}
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="font-bold text-slate-dark">#{o.id}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-dark">#{o.id}</span>
+                            {o.tipoOrden === 'ESPECIAL' && (
+                              <span className="text-[9px] font-bold uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full border border-amber-200">🎉 Evento</span>
+                            )}
+                          </div>
                           <div className="text-xs text-slate-light">{new Date(o.createdAt).toLocaleDateString()}</div>
+                          {o.fechaEvento && (
+                            <div className="text-[10px] text-amber-700 font-semibold mt-0.5">📅 Evento: {new Date(o.fechaEvento + 'T12:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           <div className="font-semibold text-slate-dark">{o.customerName}</div>
@@ -440,12 +454,23 @@ export default function AdminDashboard() {
                             <select 
                               value={o.status}
                               onChange={(e) => handleStatusChange(o.id, e.target.value)}
-                              className={`px-3 py-1.5 rounded-lg font-bold text-xs cursor-pointer border-0 outline-none ring-2 focus:ring-sage ${o.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700 ring-yellow-300' : o.status === 'PROCESSING' ? 'bg-blue-100 text-blue-700 ring-blue-300' : o.status === 'COMPLETED' ? 'bg-green-100 text-green-700 ring-green-300' : 'bg-red-100 text-red-700 ring-red-300'}`}
+                              className={`px-3 py-1.5 rounded-lg font-bold text-xs cursor-pointer border-0 outline-none ring-2 focus:ring-sage ${
+                                o.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700 ring-yellow-300'
+                                : o.status === 'AWAITING_CONFIRMATION' ? 'bg-orange-100 text-orange-700 ring-orange-300'
+                                : o.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-700 ring-blue-300'
+                                : o.status === 'PROCESSING' ? 'bg-purple-100 text-purple-700 ring-purple-300'
+                                : o.status === 'DELIVERED' ? 'bg-teal-100 text-teal-700 ring-teal-300'
+                                : o.status === 'COMPLETED' ? 'bg-green-100 text-green-700 ring-green-300'
+                                : 'bg-red-100 text-red-700 ring-red-300'
+                              }`}
                             >
-                              <option value="PENDING">PENDIENTE</option>
-                              <option value="PROCESSING">PREPARANDO PEDIDO</option>
-                              <option value="COMPLETED">ENTREGADO</option>
-                              <option value="CANCELLED">CANCELADO</option>
+                              <option value="PENDING">⏳ PENDIENTE</option>
+                              <option value="AWAITING_CONFIRMATION">🏪 ESPERA CONFIRMACIÓN</option>
+                              <option value="CONFIRMED">✅ CONFIRMADO</option>
+                              <option value="PROCESSING">📦 PREPARANDO</option>
+                              <option value="DELIVERED">🚚 ENTREGADO</option>
+                              <option value="COMPLETED">🌟 COMPLETADO</option>
+                              <option value="CANCELLED">❌ CANCELADO</option>
                             </select>
                           </div>
                         </td>
@@ -484,6 +509,14 @@ export default function AdminDashboard() {
                                   <strong>Notas del Cliente:</strong> {o.notas}
                                 </div>
                               )}
+                              {o.tipoOrden === 'ESPECIAL' && (
+                                <div className="mt-3 p-3 bg-amber-50 rounded-lg text-xs text-amber-800 border border-amber-200 space-y-1">
+                                  <p className="font-bold">🎉 Pedido Especial para Evento</p>
+                                  {o.fechaEvento && <p>📅 Fecha del evento: <strong>{new Date(o.fechaEvento + 'T12:00:00').toLocaleDateString('es-MX', { dateStyle: 'long' })}</strong></p>}
+                                  {o.cantidadPersonas && <p>👥 Personas aprox.: <strong>{o.cantidadPersonas}</strong></p>}
+                                  <p className="text-amber-600">⚠️ Requiere confirmación presencial y pago en efectivo en sucursal.</p>
+                                </div>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -504,7 +537,7 @@ export default function AdminDashboard() {
           <>
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display text-3xl font-bold text-slate-dark">Dinámicas y Promociones</h2>
-              <button 
+              <button
                 onClick={handleOpenPromoCreate}
                 className="flex items-center gap-2 bg-sage hover:bg-sage-dark text-white px-5 py-2.5 rounded-xl font-semibold shadow-md transition-all"
               >
@@ -529,15 +562,15 @@ export default function AdminDashboard() {
                     <tr key={p.id} className="border-b border-cream-200 hover:bg-cream-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                           {p.imageUrl ? (
-                              <img src={p.imageUrl} alt={p.title} className="w-12 h-12 object-cover rounded-md shadow-sm" />
-                           ) : (
-                              <div className="w-12 h-12 bg-slate-200 rounded-md flex items-center justify-center text-lg shadow-sm">🎯</div>
-                           )}
-                           <div>
-                              <p className="font-bold text-slate-dark">{p.title}</p>
-                              {p.productName && <p className="text-xs text-terracotta font-semibold">↳ {p.productName}</p>}
-                           </div>
+                          {p.imageUrl ? (
+                            <img src={p.imageUrl} alt={p.title} className="w-12 h-12 object-cover rounded-md shadow-sm" />
+                          ) : (
+                            <div className="w-12 h-12 bg-slate-200 rounded-md flex items-center justify-center text-lg shadow-sm">🎯</div>
+                          )}
+                          <div>
+                            <p className="font-bold text-slate-dark">{p.title}</p>
+                            {p.productName && <p className="text-xs text-terracotta font-semibold">↳ {p.productName}</p>}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -546,23 +579,23 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <HiFire className="w-4 h-4 text-warmred" /> 
+                          <HiFire className="w-4 h-4 text-warmred" />
                           <span className="font-bold text-slate-dark text-lg">{p.clickCount}</span> clics
                         </div>
                       </td>
                       <td className="px-6 py-4 text-center">
-                         <span className={`px-2 py-1 text-[10px] font-bold uppercase rounded-full ${p.isActive && new Date(p.endDate) >= new Date() ? 'bg-sage/20 text-sage' : 'bg-slate-200 text-slate-500'}`}>
-                            {p.isActive && new Date(p.endDate) >= new Date() ? 'Activa' : (p.isActive ? 'Vencida' : 'Oculta')}
-                         </span>
+                        <span className={`px-2 py-1 text-[10px] font-bold uppercase rounded-full ${p.isActive && new Date(p.endDate) >= new Date() ? 'bg-sage/20 text-sage' : 'bg-slate-200 text-slate-500'}`}>
+                          {p.isActive && new Date(p.endDate) >= new Date() ? 'Activa' : (p.isActive ? 'Vencida' : 'Oculta')}
+                        </span>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                           <button onClick={() => handleOpenPromoEdit(p)} className="p-2 bg-cream-200 hover:bg-terracotta hover:text-white rounded-lg transition-colors text-slate-dark">
-                             <HiPencil />
-                           </button>
-                           <button onClick={() => handleDeletePromo(p.id)} className="p-2 bg-cream-200 hover:bg-warmred hover:text-white rounded-lg transition-colors text-slate-dark">
-                             <HiTrash />
-                           </button>
+                          <button onClick={() => handleOpenPromoEdit(p)} className="p-2 bg-cream-200 hover:bg-terracotta hover:text-white rounded-lg transition-colors text-slate-dark">
+                            <HiPencil />
+                          </button>
+                          <button onClick={() => handleDeletePromo(p.id)} className="p-2 bg-cream-200 hover:bg-warmred hover:text-white rounded-lg transition-colors text-slate-dark">
+                            <HiTrash />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -581,48 +614,48 @@ export default function AdminDashboard() {
           <div className="max-w-4xl">
             <div className="flex items-center justify-between mb-6">
               <div>
-                 <h2 className="font-display text-3xl font-bold text-slate-dark">Políticas y Textos Legales</h2>
-                 <p className="text-slate-mid text-sm mt-1">Versionando modificaciones para compliance y auditorías automáticas.</p>
+                <h2 className="font-display text-3xl font-bold text-slate-dark">Políticas y Textos Legales</h2>
+                <p className="text-slate-mid text-sm mt-1">Versionando modificaciones para compliance y auditorías automáticas.</p>
               </div>
             </div>
 
             <div className="bg-white rounded-2xl border border-cream-300 shadow-sm overflow-hidden p-6 md:p-8">
-               <div className="flex gap-4 mb-6">
-                  <button className="px-5 py-2.5 rounded-xl text-sm font-bold bg-terracotta text-white shadow-sm ring-2 ring-terracotta/20">
-                    Términos y Condiciones
-                  </button>
-                  <button disabled className="px-5 py-2.5 rounded-xl text-sm font-bold bg-cream-100 text-slate-light cursor-not-allowed">
-                    Políticas de Privacidad (Próximamente)
-                  </button>
-               </div>
+              <div className="flex gap-4 mb-6">
+                <button className="px-5 py-2.5 rounded-xl text-sm font-bold bg-terracotta text-white shadow-sm ring-2 ring-terracotta/20">
+                  Términos y Condiciones
+                </button>
+                <button disabled className="px-5 py-2.5 rounded-xl text-sm font-bold bg-cream-100 text-slate-light cursor-not-allowed">
+                  Políticas de Privacidad (Próximamente)
+                </button>
+              </div>
 
-               <div className="mb-4">
-                  <div className="flex justify-between items-end mb-2">
-                     <label className="font-bold text-slate-dark uppercase tracking-wider text-xs">Redactar / Editar T&C</label>
-                     <span className="text-xs font-semibold bg-sage/20 text-sage px-3 py-1 rounded-full">
-                       Versión Actual: {legalVersion > 0 ? legalVersion : 'Ninguna'}
-                     </span>
-                  </div>
-                  <textarea 
-                     value={legalContent}
-                     onChange={(e) => setLegalContent(e.target.value)}
-                     className="w-full h-[50vh] min-h-[400px] p-4 bg-cream-50 border border-cream-300 rounded-xl focus:ring-2 focus:ring-terracotta focus:border-terracotta resize-y whitespace-pre-wrap font-sans text-sm text-slate-dark leading-relaxed"
-                     placeholder="Pega aquí todo el texto legal largo. Los saltos de párrafo se respetarán..."
-                  />
-                  <p className="text-xs text-slate-mid mt-3 flex items-center gap-1">
-                     <HiOutlineDocumentText className="w-4 h-4" /> Al guardar, se generará una nueva versión inmutable en el historial y se mostrará al instante en la pasarela de pagos.
-                  </p>
-               </div>
+              <div className="mb-4">
+                <div className="flex justify-between items-end mb-2">
+                  <label className="font-bold text-slate-dark uppercase tracking-wider text-xs">Redactar / Editar T&C</label>
+                  <span className="text-xs font-semibold bg-sage/20 text-sage px-3 py-1 rounded-full">
+                    Versión Actual: {legalVersion > 0 ? legalVersion : 'Ninguna'}
+                  </span>
+                </div>
+                <textarea
+                  value={legalContent}
+                  onChange={(e) => setLegalContent(e.target.value)}
+                  className="w-full h-[50vh] min-h-[400px] p-4 bg-cream-50 border border-cream-300 rounded-xl focus:ring-2 focus:ring-terracotta focus:border-terracotta resize-y whitespace-pre-wrap font-sans text-sm text-slate-dark leading-relaxed"
+                  placeholder="Pega aquí todo el texto legal largo. Los saltos de párrafo se respetarán..."
+                />
+                <p className="text-xs text-slate-mid mt-3 flex items-center gap-1">
+                  <HiOutlineDocumentText className="w-4 h-4" /> Al guardar, se generará una nueva versión inmutable en el historial y se mostrará al instante en la pasarela de pagos.
+                </p>
+              </div>
 
-               <div className="flex justify-end pt-4 border-t border-cream-200">
-                  <button 
-                     disabled={loading}
-                     onClick={handleSaveLegal}
-                     className="px-6 py-3 bg-sage hover:bg-sage-dark text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2"
-                  >
-                     {loading ? 'Guardando...' : 'Publicar Nueva Versión'}
-                  </button>
-               </div>
+              <div className="flex justify-end pt-4 border-t border-cream-200">
+                <button
+                  disabled={loading}
+                  onClick={handleSaveLegal}
+                  className="px-6 py-3 bg-sage hover:bg-sage-dark text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                >
+                  {loading ? 'Guardando...' : 'Publicar Nueva Versión'}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -631,7 +664,7 @@ export default function AdminDashboard() {
       {/* Modal de Creación (Productos) */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden mt-10 md:mt-0"
@@ -647,7 +680,7 @@ export default function AdminDashboard() {
 
             <form onSubmit={handleSaveProduct} className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                
+
                 {/* Columna Izquierda: Imagen */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-mid uppercase tracking-wider mb-2">
@@ -658,14 +691,14 @@ export default function AdminDashboard() {
                       <img src={previewImage} alt="Preview" className="w-full h-full object-cover" />
                     ) : (
                       <div className="text-center text-slate-mid group-hover:text-terracotta flex flex-col items-center">
-                         <HiPhotograph className="w-10 h-10 mb-2 opacity-50" />
-                         <span className="text-sm font-medium">Clic para subir imagen</span>
-                         <span className="text-xs opacity-75 mt-1">JPG, PNG (Max 2MB)</span>
+                        <HiPhotograph className="w-10 h-10 mb-2 opacity-50" />
+                        <span className="text-sm font-medium">Clic para subir imagen</span>
+                        <span className="text-xs opacity-75 mt-1">JPG, PNG (Max 2MB)</span>
                       </div>
                     )}
-                    <input 
-                      type="file" 
-                      accept="image/*" 
+                    <input
+                      type="file"
+                      accept="image/*"
                       onChange={handleImageUpload}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     />
@@ -676,53 +709,89 @@ export default function AdminDashboard() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-mid uppercase tracking-wider mb-1">Nombre</label>
-                    <input type="text" required value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" />
+                    <input type="text" required value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-semibold text-slate-mid uppercase tracking-wider mb-1">Marca</label>
-                      <input type="text" required value={form.marca} onChange={e => setForm({...form, marca: e.target.value})} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" />
+                      <input type="text" required value={form.marca} onChange={e => setForm({ ...form, marca: e.target.value })} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" />
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-slate-mid uppercase tracking-wider mb-1">Precio ($)</label>
-                      <input type="number" step="0.01" required value={form.precio} onChange={e => setForm({...form, precio: e.target.value})} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" />
+                      <input type="number" step="0.01" required value={form.precio} onChange={e => setForm({ ...form, precio: e.target.value })} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-semibold text-slate-mid uppercase tracking-wider mb-1">Categoría</label>
-                      <select required value={form.categoria} onChange={e => setForm({...form, categoria: e.target.value})} className="w-full px-4 py-2.5 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta">
+                      <select required value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })} className="w-full px-4 py-2.5 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta">
                         {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-slate-mid uppercase tracking-wider mb-1">Stock</label>
-                      <input type="number" required value={form.numInventario} onChange={e => setForm({...form, numInventario: e.target.value})} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" />
+                      <input type="number" required value={form.numInventario} onChange={e => setForm({ ...form, numInventario: e.target.value })} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" />
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 pt-4 border-t border-cream-200">
                 <div className="flex items-center gap-3">
-                   <input type="checkbox" id="oferta" checked={form.enOferta} onChange={e => setForm({...form, enOferta: e.target.checked})} className="w-5 h-5 text-terracotta border-cream-300 rounded focus:ring-terracotta" />
-                   <label htmlFor="oferta" className="text-sm font-semibold text-slate-dark">¿En Oferta?</label>
+                  <input type="checkbox" id="oferta" checked={form.enOferta} onChange={e => setForm({ ...form, enOferta: e.target.checked })} className="w-5 h-5 text-terracotta border-cream-300 rounded focus:ring-terracotta" />
+                  <label htmlFor="oferta" className="text-sm font-semibold text-slate-dark">¿En Oferta?</label>
                 </div>
                 <div className="md:col-span-2">
-                   <label className={`block text-xs font-semibold uppercase tracking-wider mb-1 ${!form.enOferta ? 'text-slate-light' : 'text-slate-mid'}`}>Porcentaje de Descuento (%)</label>
-                   <input type="number" min="0" max="100" disabled={!form.enOferta} value={form.porcentajeDescuento} onChange={e => setForm({...form, porcentajeDescuento: e.target.value})} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta disabled:opacity-50" />
+                  <label className={`block text-xs font-semibold uppercase tracking-wider mb-1 ${!form.enOferta ? 'text-slate-light' : 'text-slate-mid'}`}>Porcentaje de Descuento (%)</label>
+                  <input type="number" min="0" max="100" disabled={!form.enOferta} value={form.porcentajeDescuento} onChange={e => setForm({ ...form, porcentajeDescuento: e.target.value })} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta disabled:opacity-50" />
+                </div>
+              </div>
+
+              {/* Toggle Pedido Especial */}
+              <div className={`mb-6 p-4 rounded-2xl border-2 transition-all ${
+                form.esEspecial
+                  ? 'border-amber-400 bg-amber-50'
+                  : 'border-cream-200 bg-cream-50'
+              }`}>
+                <div className="flex items-start gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, esEspecial: !form.esEspecial })}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none mt-0.5 ${
+                      form.esEspecial ? 'bg-amber-500' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      form.esEspecial ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                  <div>
+                    <p className="text-sm font-bold text-slate-dark">
+                      🎉 Producto para Pedido Especial
+                    </p>
+                    <p className="text-xs text-slate-mid mt-0.5">
+                      {form.esEspecial
+                        ? 'Este producto NO aparecerá en el catálogo público. Solo visible en la sección "Pedidos Especiales".'
+                        : 'Activa para que este producto sea exclusivo de Pedidos Especiales (eventos, grandes volúmenes).'}
+                    </p>
+                    {form.esEspecial && (
+                      <p className="text-[11px] text-amber-700 mt-2 font-semibold">
+                        ⚠️ Solo aparecerá en /pedidos-especiales, no en el catálogo general.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-mid uppercase tracking-wider mb-1">Descripción Breve</label>
-                <textarea rows="2" value={form.descripcion} onChange={e => setForm({...form, descripcion: e.target.value})} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta resize-none"></textarea>
+                <textarea rows="2" value={form.descripcion} onChange={e => setForm({ ...form, descripcion: e.target.value })} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta resize-none"></textarea>
               </div>
 
               <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-cream-200">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-2.5 rounded-xl font-semibold text-slate-mid hover:bg-cream-200 transition">Cancelar</button>
                 <button type="submit" disabled={loading} className="px-6 py-2.5 rounded-xl font-semibold text-white bg-terracotta hover:bg-terracotta-dark shadow-md transition disabled:opacity-50 flex items-center gap-2">
-                   {loading ? 'Guardando...' : 'Guardar Producto'}
+                  {loading ? 'Guardando...' : 'Guardar Producto'}
                 </button>
               </div>
             </form>
@@ -733,7 +802,7 @@ export default function AdminDashboard() {
       {/* Modal de Creación (Promociones) */}
       {isPromoModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden mt-10 md:mt-0"
@@ -749,7 +818,7 @@ export default function AdminDashboard() {
 
             <form onSubmit={handleSavePromo} className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                
+
                 {/* Columna Izquierda: Imagen */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-mid uppercase tracking-wider mb-2">
@@ -760,14 +829,14 @@ export default function AdminDashboard() {
                       <img src={promoPreview} alt="Preview" className="w-full h-full object-cover" />
                     ) : (
                       <div className="text-center text-slate-mid group-hover:text-terracotta flex flex-col items-center">
-                         <HiPhotograph className="w-10 h-10 mb-2 opacity-50" />
-                         <span className="text-sm font-medium">Subir Banner</span>
-                         <span className="text-xs opacity-75 mt-1">Preferible Horizontal (16:9)</span>
+                        <HiPhotograph className="w-10 h-10 mb-2 opacity-50" />
+                        <span className="text-sm font-medium">Subir Banner</span>
+                        <span className="text-xs opacity-75 mt-1">Preferible Horizontal (16:9)</span>
                       </div>
                     )}
-                    <input 
-                      type="file" 
-                      accept="image/*" 
+                    <input
+                      type="file"
+                      accept="image/*"
                       onChange={handlePromoImageUpload}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     />
@@ -778,25 +847,25 @@ export default function AdminDashboard() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-mid uppercase tracking-wider mb-1">Título de la Campaña</label>
-                    <input type="text" required value={promoForm.title} onChange={e => setPromoForm({...promoForm, title: e.target.value})} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" placeholder="Ej: Gana con Sabritas" />
+                    <input type="text" required value={promoForm.title} onChange={e => setPromoForm({ ...promoForm, title: e.target.value })} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" placeholder="Ej: Gana con Sabritas" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-semibold text-slate-mid uppercase tracking-wider mb-1">Fecha Inicio</label>
-                      <input type="datetime-local" required value={promoForm.startDate} onChange={e => setPromoForm({...promoForm, startDate: e.target.value})} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" />
+                      <input type="datetime-local" required value={promoForm.startDate} onChange={e => setPromoForm({ ...promoForm, startDate: e.target.value })} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" />
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-slate-mid uppercase tracking-wider mb-1">Fecha Fin</label>
-                      <input type="datetime-local" required value={promoForm.endDate} onChange={e => setPromoForm({...promoForm, endDate: e.target.value})} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" />
+                      <input type="datetime-local" required value={promoForm.endDate} onChange={e => setPromoForm({ ...promoForm, endDate: e.target.value })} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-semibold text-slate-mid uppercase tracking-wider mb-1">Prioridad (1-10)</label>
-                      <input type="number" min="1" max="10" required value={promoForm.priority} onChange={e => setPromoForm({...promoForm, priority: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" />
+                      <input type="number" min="1" max="10" required value={promoForm.priority} onChange={e => setPromoForm({ ...promoForm, priority: parseInt(e.target.value) })} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" />
                     </div>
                     <div className="flex items-center gap-2 mt-6">
-                      <input type="checkbox" id="promoActiva" checked={promoForm.isActive} onChange={e => setPromoForm({...promoForm, isActive: e.target.checked})} className="w-5 h-5 text-terracotta border-cream-300 rounded focus:ring-terracotta" />
+                      <input type="checkbox" id="promoActiva" checked={promoForm.isActive} onChange={e => setPromoForm({ ...promoForm, isActive: e.target.checked })} className="w-5 h-5 text-terracotta border-cream-300 rounded focus:ring-terracotta" />
                       <label htmlFor="promoActiva" className="text-sm font-semibold text-slate-dark">Activa</label>
                     </div>
                   </div>
@@ -805,42 +874,42 @@ export default function AdminDashboard() {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-mid uppercase tracking-wider mb-1">Descripción / Dinámica</label>
-                <textarea required rows="3" value={promoForm.description} onChange={e => setPromoForm({...promoForm, description: e.target.value})} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta resize-none" placeholder="Ingresa tu código en..."></textarea>
+                <textarea required rows="3" value={promoForm.description} onChange={e => setPromoForm({ ...promoForm, description: e.target.value })} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta resize-none" placeholder="Ingresa tu código en..."></textarea>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-mid uppercase tracking-wider mb-1">Enlace Externo (Opcional)</label>
-                  <input type="url" value={promoForm.externalLink} onChange={e => setPromoForm({...promoForm, externalLink: e.target.value})} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" placeholder="https://sabritas.com.mx/promo" />
+                  <input type="url" value={promoForm.externalLink} onChange={e => setPromoForm({ ...promoForm, externalLink: e.target.value })} className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" placeholder="https://sabritas.com.mx/promo" />
                 </div>
                 <div className="relative">
                   <label className="block text-xs font-semibold text-slate-mid uppercase tracking-wider mb-1">Producto Vinculado (Opcional)</label>
-                  <input 
-                    type="text" 
-                    value={productSearch} 
-                    onChange={e => { setProductSearch(e.target.value); setShowProductDropdown(true); if(!e.target.value) setPromoForm({...promoForm, productId: null, productName: ''}); }} 
+                  <input
+                    type="text"
+                    value={productSearch}
+                    onChange={e => { setProductSearch(e.target.value); setShowProductDropdown(true); if (!e.target.value) setPromoForm({ ...promoForm, productId: null, productName: '' }); }}
                     onFocus={() => setShowProductDropdown(true)}
                     onBlur={() => setTimeout(() => setShowProductDropdown(false), 200)}
-                    className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta" 
-                    placeholder="Buscar producto..." 
+                    className="w-full px-4 py-2 bg-cream-50 border border-cream-300 rounded-xl text-sm focus:ring-2 focus:border-terracotta"
+                    placeholder="Buscar producto..."
                   />
                   {showProductDropdown && productSearch && filteredProductsForSearch.length > 0 && (
-                     <div className="absolute z-10 mt-1 w-full bg-white border border-cream-300 rounded-xl shadow-lg overflow-hidden">
-                        {filteredProductsForSearch.map(p => (
-                           <button 
-                             key={p.id} 
-                             type="button"
-                             onClick={() => {
-                                setPromoForm({...promoForm, productId: p.id, productName: p.nombre});
-                                setProductSearch(p.nombre);
-                                setShowProductDropdown(false);
-                             }}
-                             className="w-full text-left px-4 py-2 text-sm hover:bg-cream-100 border-b border-cream-200 last:border-0"
-                           >
-                              {p.nombre} <span className="text-xs text-slate-light ml-2">${p.precio}</span>
-                           </button>
-                        ))}
-                     </div>
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-cream-300 rounded-xl shadow-lg overflow-hidden">
+                      {filteredProductsForSearch.map(p => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            setPromoForm({ ...promoForm, productId: p.id, productName: p.nombre });
+                            setProductSearch(p.nombre);
+                            setShowProductDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-cream-100 border-b border-cream-200 last:border-0"
+                        >
+                          {p.nombre} <span className="text-xs text-slate-light ml-2">${p.precio}</span>
+                        </button>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
@@ -848,7 +917,7 @@ export default function AdminDashboard() {
               <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-cream-200">
                 <button type="button" onClick={() => setIsPromoModal(false)} className="px-6 py-2.5 rounded-xl font-semibold text-slate-mid hover:bg-cream-200 transition">Cancelar</button>
                 <button type="submit" disabled={loading} className="px-6 py-2.5 rounded-xl font-semibold text-white bg-sage hover:bg-sage-dark shadow-md transition disabled:opacity-50 flex items-center gap-2">
-                   {loading ? 'Guardando...' : 'Guardar Dinámica'}
+                  {loading ? 'Guardando...' : 'Guardar Dinámica'}
                 </button>
               </div>
             </form>

@@ -7,12 +7,26 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Sync with localStorage on mount
     const savedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
-    
+
     if (savedUser && token) {
-      setUser(JSON.parse(savedUser));
+      // Decode JWT and check expiry before restoring session
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const isExpired = payload.exp && Date.now() / 1000 > payload.exp;
+        if (isExpired) {
+          // Token expired — clear stale session silently
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        } else {
+          setUser(JSON.parse(savedUser));
+        }
+      } catch {
+        // Malformed token — clear it
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
     }
     setLoading(false);
   }, []);

@@ -3,12 +3,15 @@ package com.lasflores.controller;
 import com.lasflores.entity.AppUser;
 import com.lasflores.entity.Order;
 import com.lasflores.entity.OrderStatus;
+
 import com.lasflores.exception.ResourceNotFoundException;
 import com.lasflores.repository.OrderRepository;
+import com.lasflores.repository.ProductRepository;
 import com.lasflores.repository.UserRepository;
 import com.lasflores.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -23,6 +26,7 @@ public class OrderController {
 
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
     private final EmailService emailService;
 
     private static final Set<OrderStatus> CANCELLABLE = Set.of(
@@ -30,10 +34,22 @@ public class OrderController {
     );
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Order>> getUserOrders(@PathVariable Long userId) {
-        AppUser user = userRepository.findById(userId)
+    public ResponseEntity<?> getUserOrders(@PathVariable Long userId) {
+        // Anti-IDOR: verify the JWT principal matches the requested userId
+        String principalEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        AppUser requestingUser = userRepository.findByCorreo(principalEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario autenticado no encontrado"));
+
+        // Allow ADMIN to query any user; regular users only their own
+        boolean isAdmin = requestingUser.getRol().name().equals("ADMIN");
+        if (!isAdmin && !requestingUser.getId().equals(userId)) {
+            return ResponseEntity.status(403)
+                    .body(Map.of("message", "No tienes permiso para ver estos pedidos."));
+        }
+
+        AppUser targetUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + userId));
-        List<Order> orders = orderRepository.findByUserOrderByCreatedAtDesc(user);
+        List<Order> orders = orderRepository.findByUserOrderByCreatedAtDesc(targetUser);
         return ResponseEntity.ok(orders);
     }
 
@@ -79,6 +95,16 @@ public class OrderController {
 
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
+
+        // Restore stock for each item in the cancelled order
+        order.getItems().forEach(item -> {
+            if (item.getProductId() != null) {
+                productRepository.findById(item.getProductId()).ifPresent(product -> {
+                    product.setNumInventario(product.getNumInventario() + item.getCantidad());
+                    productRepository.save(product);
+                });
+            }
+        });
 
         emailService.sendOrderCancellationToUser(order);
 

@@ -1,11 +1,20 @@
-import { createContext, useContext, useReducer, useCallback } from 'react';
+import { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
 
 const CartContext = createContext();
 
-const initialState = {
-  items: [],
-  isOpen: false,
+const CART_KEY = 'lf_cart';
+
+// Hydrate initial state from localStorage
+const loadPersistedCart = () => {
+  try {
+    const saved = localStorage.getItem(CART_KEY);
+    return saved ? { items: JSON.parse(saved), isOpen: false } : { items: [], isOpen: false };
+  } catch {
+    return { items: [], isOpen: false };
+  }
 };
+
+const initialState = loadPersistedCart();
 
 function cartReducer(state, action) {
   switch (action.type) {
@@ -90,6 +99,14 @@ function cartReducer(state, action) {
 
 export function CartProvider({ children }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
+
+  // Persist cart items to localStorage on every change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_KEY, JSON.stringify(state.items));
+    } catch { /* storage quota exceeded or private mode */ }
+  }, [state.items]);
 
   const addItem = useCallback((product, variant = null, cantidad = 1) => {
     dispatch({ type: 'ADD_ITEM', payload: { product, variant, cantidad } });

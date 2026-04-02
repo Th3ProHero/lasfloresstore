@@ -80,27 +80,24 @@ public class SecurityConfig {
             .cors(cors -> {})
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints
-                .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                // ── Public (no token needed) ─────────────────────────────────
+                .requestMatchers(HttpMethod.GET,  "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/checkout").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/promotions/active").permitAll()
+                .requestMatchers(HttpMethod.GET,  "/api/promotions/active").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/promotions/*/click").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/legal/**").permitAll()
+                .requestMatchers(HttpMethod.GET,  "/api/legal/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
-                // Swagger/OpenAPI
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**", "/swagger-ui.html").permitAll()
-                // H2 Console (dev only)
                 .requestMatchers("/h2-console/**").permitAll()
-                // Actuator
                 .requestMatchers("/actuator/**").permitAll()
-                // Admin endpoints
-                .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                // ── Admin-only ───────────────────────────────────────────────
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")          // stats, orders, etc.
                 .requestMatchers("/api/inventory/**").hasRole("ADMIN")
-                .requestMatchers("/api/admin/orders/**").hasRole("ADMIN")
-                .requestMatchers("/api/promotions/**").hasRole("ADMIN")
-                .requestMatchers("/api/legal/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST,   "/api/products/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT,    "/api/products/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                .requestMatchers("/api/promotions/**").hasRole("ADMIN")     // write operations
+                // ── Authenticated users ──────────────────────────────────────
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider)

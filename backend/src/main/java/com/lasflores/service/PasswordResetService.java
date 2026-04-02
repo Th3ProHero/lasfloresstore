@@ -44,7 +44,10 @@ public class PasswordResetService {
             tokenRepository.save(resetToken);
 
             String resetUrl = baseUrl + "/reset-password?token=" + token;
-            emailService.sendPasswordResetEmail(user.getNombre(), email, resetUrl);
+            String displayName = (user.getNombre() != null && !user.getNombre().isBlank())
+                    ? user.getNombre()
+                    : user.getCorreo();
+            emailService.sendPasswordResetEmail(displayName, email, resetUrl);
             log.info("Reset token generado para: {}", email);
         });
     }

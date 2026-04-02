@@ -204,6 +204,11 @@ export default function CheckoutPage() {
       // Forzar scroll al inicio para ver el ticket de éxito
       window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     } catch (err) {
+      if (err.response?.status === 401) {
+        // Session expired — redirect to login
+        navigate('/login', { state: { from: '/checkout', msg: 'Tu sesión expiró. Inicia sesión para completar tu compra.' } });
+        return;
+      }
       const msg = err.response?.data?.message || err.response?.data?.error || 'Error al procesar la compra';
       setError(msg);
     } finally {

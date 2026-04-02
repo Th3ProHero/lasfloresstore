@@ -34,8 +34,12 @@ const RegisterPage = () => {
       setSuccess(true);
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
-      setError(err.response?.data?.error || err.response?.data?.message || 'Error al registrarse. Intenta de nuevo.');
-    } finally {
+      if (err.response?.data?.details) {
+        const firstError = Object.values(err.response.data.details)[0];
+        setError(firstError);
+      } else {
+        setError(err.response?.data?.error || err.response?.data?.message || 'Error al registrarse. Intenta de nuevo.');
+      }
       setLoading(false);
     }
   };
@@ -140,6 +144,7 @@ const RegisterPage = () => {
                 name="password"
                 type="password"
                 required
+                minLength={6}
                 className="block w-full pl-10 pr-3 py-3 border border-gray-100 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-[#4a5d4e] outline-none transition-all shadow-sm"
                 placeholder="••••••••"
                 value={formData.password}
@@ -156,6 +161,7 @@ const RegisterPage = () => {
                 name="confirmPassword"
                 type="password"
                 required
+                minLength={6}
                 className="block w-full pl-10 pr-3 py-3 border border-gray-100 rounded-xl bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-[#4a5d4e] outline-none transition-all shadow-sm"
                 placeholder="••••••••"
                 value={formData.confirmPassword}

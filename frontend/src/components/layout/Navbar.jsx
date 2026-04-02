@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiShoppingCart, HiMenu, HiX } from 'react-icons/hi';
+import { HiShoppingCart, HiMenu, HiX, HiUser } from 'react-icons/hi';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Navbar() {
   const { totalItems, toggleCart } = useCart();
+  const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navLinks = [
@@ -50,8 +52,21 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Cart + Mobile */}
-          <div className="flex items-center gap-4">
+          {/* Icons Context Data */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* User Icon */}
+            <Link
+              to={user ? "/mis-pedidos" : "/login"}
+              className="relative p-2 rounded-xl hover:bg-cream-200 transition-colors duration-200 group flex items-center justify-center"
+              title={user ? "Mi Perfil" : "Iniciar Sesión"}
+            >
+              <div className="relative">
+                <HiUser className="w-6 h-6 text-slate-dark group-hover:text-terracotta transition-colors" />
+                <span className="absolute -top-2 -right-2 text-sm drop-shadow-sm transition-transform duration-300 group-hover:rotate-45 group-hover:scale-110">🌸</span>
+              </div>
+            </Link>
+
+            {/* Cart toggle */}
             <button
               id="cart-toggle"
               aria-label="Abrir carrito"

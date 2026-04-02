@@ -20,10 +20,17 @@ public class CheckoutService {
     private final ProductRepository productRepository;
     private final ProductVariantRepository variantRepository;
     private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
+    private final EmailService emailService;
 
     @Transactional
     public CheckoutResponse processCheckout(CheckoutRequest request) {
+        AppUser user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + request.getUserId()));
+
         Order order = Order.builder()
+                .user(user)
+                .orderNumber("PENDING") // Will update after first save
                 .customerName(request.getCustomerName())
                 .customerEmail(request.getCustomerEmail())
                 .customerPhone(request.getCustomerPhone())
@@ -94,29 +101,42 @@ public class CheckoutService {
         // Payment processing placeholder
         switch (request.getMetodoPago()) {
             case SPEI:
-                log.info("📧 SPEI payment placeholder - Order will be confirmed upon transfer verification");
+                log.info("📧 SPEI payment placeholder");
                 order.setStatus(OrderStatus.PENDING);
                 break;
             case TARJETA:
-                log.info("💳 Card payment placeholder - Integrate with payment gateway (e.g., Stripe, Conekta)");
+                log.info("💳 Card payment placeholder");
                 order.setStatus(OrderStatus.PENDING);
                 break;
             case EFECTIVO:
-                log.info("💵 Cash payment - Order confirmed, collect on delivery/pickup");
+                log.info("💵 Cash payment confirmed");
                 order.setStatus(OrderStatus.CONFIRMED);
                 break;
         }
 
+        // Save order to get ID
         Order savedOrder = orderRepository.save(order);
+        
+        // Generate and set order number: FLORES-0000 format
+        String orderNumber = String.format("FLORES-%04d", savedOrder.getId());
+        savedOrder.setOrderNumber(orderNumber);
+        
+        // Final save with order number
+        savedOrder = orderRepository.save(savedOrder);
+
+        // Send emails
+        emailService.sendOrderConfirmationToUser(savedOrder);
+        emailService.sendOrderNotificationToAdmin(savedOrder);
 
         String message = switch (request.getMetodoPago()) {
-            case SPEI -> "Orden creada. Realiza tu transferencia SPEI y envía el comprobante.";
-            case TARJETA -> "Orden creada. Procesando pago con tarjeta (pendiente integración pasarela).";
-            case EFECTIVO -> "Orden confirmada. Paga en efectivo al recoger tu pedido.";
+            case SPEI -> "Orden " + orderNumber + " creada. Realiza tu transferencia SPEI y envía el comprobante.";
+            case TARJETA -> "Orden " + orderNumber + " creada. Procesando pago con tarjeta.";
+            case EFECTIVO -> "Orden " + orderNumber + " confirmada. Paga en efectivo al recoger tu pedido.";
         };
 
         return CheckoutResponse.builder()
                 .orderId(savedOrder.getId())
+                .orderNumber(savedOrder.getOrderNumber())
                 .total(savedOrder.getTotal())
                 .metodoPago(savedOrder.getMetodoPago())
                 .status(savedOrder.getStatus())

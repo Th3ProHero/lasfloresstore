@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: 'Georgia', serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f9f7f2; }
+        .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e0d0b0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .header { background-color: #4a5d4e; color: #f9f7f2; text-align: center; padding: 30px; border-bottom: 5px solid #d4af37; }
+        .header h1 { margin: 0; font-size: 28px; letter-spacing: 2px; text-transform: uppercase; }
+        .header p { margin: 5px 0 0; opacity: 0.9; font-style: italic; }
+        .content { padding: 30px; }
+        .order-meta { margin-bottom: 25px; border-bottom: 1px dashed #ccc; padding-bottom: 15px; }
+        .order-meta p { margin: 5px 0; }
+        .order-meta strong { color: #4a5d4e; }
+        .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .items-table th { text-align: left; background-color: #f4efdf; padding: 12px; border-bottom: 2px solid #4a5d4e; font-size: 14px; text-transform: uppercase; }
+        .items-table td { padding: 12px; border-bottom: 1px solid #ebebeb; vertical-align: top; }
+        .total-section { text-align: right; margin-top: 20px; font-size: 18px; color: #4a5d4e; }
+        .total-amount { font-weight: bold; font-size: 24px; color: #d4af37; }
+        .footer { background-color: #f4efdf; text-align: center; padding: 20px; font-size: 12px; color: #777; border-top: 1px solid #e0d0b0; }
+        .btn { display: inline-block; padding: 12px 25px; background-color: #4a5d4e; color: #fff; text-decoration: none; border-radius: 4px; margin-top: 20px; font-weight: bold; }
+        .status-pill { display: inline-block; padding: 4px 10px; border-radius: 20px; background-color: #fff9c4; color: #f57f17; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .admin-note { background-color: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; margin-top: 20px; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 th:text="${isAdmin} ? 'NUEVA ORDEN RECIBIDA' : 'DETALLE DE TU PEDIDO'">ORDEN RECIBIDA</h1>
+            <p>Las Flores Store</p>
+        </div>
+        
+        <div class="content">
+            <div class="order-meta">
+                <p><strong>Número de Folio:</strong> <span th:text="${order.orderNumber}">FLORES-0000</span></p>
+                <p><strong>Fecha:</strong> <span th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024</span></p>
+                <p><strong>Estatus:</strong> <span class="status-pill" th:text="${order.status}">PENDIENTE</span></p>
+            </div>
+
+            <p th:if="${!isAdmin}">Hola <strong th:text="${order.customerName}">Cliente</strong>, gracias por tu compra. Aquí tienes los detalles de tu pedido:</p>
+            <p th:if="${isAdmin}">Se ha recibido una nueva orden de: <strong th:text="${order.customerName}">Cliente</strong>.</p>
+            
+            <p><strong>Entregar a:</strong> <span th:text="${order.customerName}">Nombre</span><br/>
+            <strong>Email:</strong> <span th:text="${order.customerEmail}">correo@ejemplo.com</span><br/>
+            <strong>Teléfono:</strong> <span th:text="${order.customerPhone != null ? order.customerPhone : 'No proporcionado'}">555-555</span></p>
+            
+            <p th:if="${order.notas != null && !order.notas.empty}">
+                <strong>Notas:</strong> <span th:text="${order.notas}">Notas del pedido</span>
+            </p>
+
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Artículo</th>
+                        <th>Cant.</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item : ${order.items}">
+                        <td>
+                            <strong th:text="${item.productName}">Producto</strong><br/>
+                            <small th:if="${item.variantSabor != null}" th:text="'Sabor: ' + ${item.variantSabor}"></small>
+                        </td>
+                        <td th:text="${item.cantidad}">1</td>
+                        <td th:text="'$' + ${item.subtotal}">$0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="total-section">
+                <span>TOTAL:</span>
+                <span class="total-amount" th:text="'$' + ${order.total}">$0.00</span>
+                <p><small>Método de Pago: </small><strong th:text="${order.metodoPago}">SPEI</strong></p>
+            </div>
+
+            <div th:if="${isAdmin}" class="admin-note">
+                <p>Para gestionar esta orden y ver más información, ingresa al panel de administración.</p>
+            </div>
+            
+            <div th:if="${!isAdmin}" style="text-align: center;">
+                <p>Si tienes alguna duda con tu pedido, por favor contáctanos.</p>
+                <a href="#" class="btn">Ver mi pedido</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2024 Las Flores Store - Abarrotes & Más</p>
+            <p>Este es un correo automático, por favor no respondas.</p>
+        </div>
+    </div>
+</body>
+</html>

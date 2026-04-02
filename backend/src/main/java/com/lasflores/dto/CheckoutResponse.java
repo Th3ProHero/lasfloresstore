@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 public class CheckoutResponse {
     private Long orderId;
+    private String orderNumber;
     private BigDecimal total;
     private MetodoPago metodoPago;
     private OrderStatus status;

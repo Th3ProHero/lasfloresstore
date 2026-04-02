@@ -49,6 +49,17 @@ export const processCheckout = (data) =>
 export const login = (credentials) =>
   client.post('/auth/login', credentials).then((r) => r.data);
 
+export const register = (data) =>
+  client.post('/auth/register', data).then((r) => r.data);
+
+// ─── User Profile & Orders ───────────────────────
+
+export const getUserOrders = (userId) =>
+  client.get(`/orders/user/${userId}`).then((r) => r.data);
+
+export const updateProfile = (userId, data) =>
+  client.put(`/users/${userId}/profile`, data).then((r) => r.data);
+
 // ─── Admin Orders ────────────────────────────────
 
 export const getAdminOrders = () =>

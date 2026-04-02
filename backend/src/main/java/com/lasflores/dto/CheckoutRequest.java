@@ -11,6 +11,9 @@ import java.util.List;
 @Builder
 public class CheckoutRequest {
 
+    @NotNull(message = "Debes iniciar sesión para realizar un pedido")
+    private Long userId;
+
     @NotBlank(message = "El nombre del cliente es obligatorio")
     private String customerName;
 

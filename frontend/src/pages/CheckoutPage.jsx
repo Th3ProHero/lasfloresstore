@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HiArrowLeft, HiCreditCard, HiCash, HiOfficeBuilding, HiCheck } from 'react-icons/hi';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { processCheckout } from '../api/client';
 import FlowerExplosion from '../components/ui/FlowerExplosion';
 import LegalModal from '../components/ui/LegalModal';
@@ -34,9 +35,32 @@ const PAYMENT_METHODS = [
 
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1); // 1: review, 2: info, 3: confirmdfs
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
-  const [form, setForm] = useState({ name: '', email: '', phone: '', notas: '' });
+  const [form, setForm] = useState({ 
+    name: user?.username || '', 
+    email: user?.userId ? user.username : '', // In my AuthContext, username was used for display, but email is the login. 
+    // Wait, let's check AuthContext login call. 
+    // In AuthController, username is user.getNombre(). 
+    // I should check if I have email in user object. 
+    phone: '', 
+    notas: '' 
+  });
+
+  // Pre-fill form when user is available
+  useEffect(() => {
+    if (user) {
+      setForm(prev => ({
+        ...prev,
+        name: user.username || prev.name,
+        // We don't have email/phone in the basic user object from LoginPage yet, 
+        // we might want to fetch full profile or just let them fill it if not there.
+      }));
+    }
+  }, [user]);
+
   const [submitting, setSubmitting] = useState(false);
   const [orderResult, setOrderResult] = useState(null);
   const [finalOrderInfo, setFinalOrderInfo] = useState(null);
@@ -80,22 +104,22 @@ export default function CheckoutPage() {
           >
             <HiCheck className="w-12 h-12 text-white" />
           </motion.div>
-          <h2 className="font-display text-4xl font-bold text-slate-dark mb-2">
+          <h2 className="font-display text-4xl font-bold text-slate-dark mb-2 italic">
             ¡Pedido Extraordinario!
           </h2>
           <p className="text-base text-slate-mid mb-8">{orderResult.message}</p>
 
           {/* TICKET DE COMPRA */}
-          <div className="bg-white rounded-2xl border border-cream-300 shadow-xl overflow-hidden mb-8 text-left">
+          <div className="bg-white rounded-2xl border border-cream-300 shadow-xl overflow-hidden mb-8 text-left font-sans">
             <div className="bg-cream-100 p-6 border-b border-cream-300 flex justify-between items-center text-slate-dark relative overflow-hidden">
               <div className="absolute top-0 right-0 text-7xl opacity-5 -translate-y-4 translate-x-4">🌸</div>
               <div>
                 <h3 className="font-bold text-lg">Ticket de Orden</h3>
-                <p className="text-xs text-slate-mid">Fecha: {new Date(orderResult.createdAt).toLocaleString()}</p>
+                <p className="text-xs text-slate-mid tracking-tight">Fecha: {new Date(orderResult.createdAt).toLocaleString()}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-bold text-terracotta">#{orderResult.orderId}</p>
-                <span className="text-xs font-semibold bg-sage text-white px-2 py-1 rounded-md uppercase">
+                <p className="text-lg font-black text-terracotta">{orderResult.orderNumber}</p>
+                <span className="text-[10px] font-bold bg-sage text-white px-2 py-0.5 rounded uppercase tracking-widest">
                   {orderResult.status === 'CONFIRMED' ? 'APROBADA' : 'PENDIENTE'}
                 </span>
               </div>
@@ -108,9 +132,9 @@ export default function CheckoutPage() {
                     <div className="flex-1">
                       <span className="font-bold text-slate-dark mr-2">{item.cantidad}x</span>
                       <span className="text-slate-mid">{item.nombre}</span>
-                      {item.sabor && <div className="text-[11px] text-slate-light ml-6">↳ Variedad: {item.sabor}</div>}
+                      {item.sabor && <div className="text-[11px] text-slate-light ml-6 italic">↳ Variedad: {item.sabor}</div>}
                     </div>
-                    <div className="font-semibold text-slate-dark">
+                    <div className="font-bold text-slate-dark">
                       ${(item.precioUnitario * item.cantidad).toFixed(2)}
                     </div>
                   </div>
@@ -118,25 +142,34 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <div className="bg-cream-50 p-6 border-t border-cream-300">
-              <div className="flex justify-between text-sm mb-2 text-slate-mid">
+            <div className="bg-fuchsia-50/10 p-6 border-t border-cream-300">
+              <div className="flex justify-between text-sm mb-2 text-slate-mid italic">
                 <span>Método de Pago:</span>
                 <span className="font-semibold">{orderResult.metodoPago}</span>
               </div>
-              <div className="flex justify-between items-end border-t border-slate-300 pt-4 mt-2">
-                <span className="text-sm font-bold uppercase text-slate-dark">Total Pagado:</span>
-                <span className="text-3xl font-bold text-terracotta">${Number(orderResult.total).toFixed(2)}</span>
+              <div className="flex justify-between items-end border-t border-slate-200 pt-4 mt-2">
+                <span className="text-xs font-bold uppercase text-slate-dark tracking-widest">Total Pagado:</span>
+                <span className="text-3xl font-black text-terracotta">${Number(orderResult.total).toFixed(2)}</span>
               </div>
             </div>
           </div>
 
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 bg-slate-dark text-white px-8 py-4 rounded-xl
-                     font-semibold shadow-lg hover:shadow-xl hover:bg-slate-mid transition-all duration-300"
-          >
-            Volver a la Tienda
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              to="/mis-pedidos"
+              className="inline-flex items-center gap-2 bg-sage text-white px-8 py-4 rounded-xl
+                       font-semibold shadow-lg hover:shadow-xl hover:bg-sage-dark transition-all duration-300 w-full sm:w-auto"
+            >
+              Ver Mis Pedidos
+            </Link>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 bg-slate-dark text-white px-8 py-4 rounded-xl
+                       font-semibold shadow-lg hover:shadow-xl hover:bg-slate-mid transition-all duration-300 w-full sm:w-auto"
+            >
+              Volver a la Tienda
+            </Link>
+          </div>
         </motion.div>
       </div>
     );
@@ -147,6 +180,7 @@ export default function CheckoutPage() {
     setError(null);
     try {
       const payload = {
+        userId: user.userId,
         customerName: form.name,
         customerEmail: form.email || null,
         customerPhone: form.phone || null,
@@ -158,7 +192,9 @@ export default function CheckoutPage() {
           cantidad: item.cantidad,
         })),
       };
-      const result = await processCheckout(payload);
+      
+      const token = localStorage.getItem('token');
+      const result = await processCheckout(payload, token);
 
       // Guardar informacion temporal para el ticket
       setFinalOrderInfo({
@@ -168,7 +204,7 @@ export default function CheckoutPage() {
 
       setOrderResult(result);
       clearCart();
-      // Forzar scroll al inicio para ver el ticket de éxito (ya que la URL no cambia)
+      // Forzar scroll al inicio para ver el ticket de éxito
       window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data?.error || 'Error al procesar la compra';

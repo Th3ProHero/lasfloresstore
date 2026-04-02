@@ -28,6 +28,18 @@ spring:
     init:
       mode: always
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: heropatapon9956@gmail.com
+    password: fqpq whki pjdc gyqq
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 server:
   port: 8080
   tomcat:
@@ -40,6 +52,8 @@ app:
     expiration: 86400000  # 24 hours
   inventory:
     low-stock-threshold: 10
+  admin:
+    email: bautista.flores.mauricio2@gmail.com
 
 springdoc:
   api-docs:

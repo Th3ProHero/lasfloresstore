@@ -23,6 +23,9 @@ public class AppUser {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "celular", nullable = true)
+    private String celular;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role rol;

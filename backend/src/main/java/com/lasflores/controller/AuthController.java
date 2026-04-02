@@ -60,6 +60,8 @@ public class AuthController {
                     .userId(user.getId())
                     .username(user.getNombre())
                     .role(user.getRol().name())
+                    .correo(user.getCorreo())
+                    .celular(user.getCelular() != null ? user.getCelular() : "")
                     .message("Login exitoso")
                     .build());
         } catch (org.springframework.security.core.AuthenticationException e) {

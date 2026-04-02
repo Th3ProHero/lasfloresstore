@@ -1,14 +1,24 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiShoppingCart, HiMenu, HiX, HiUser } from 'react-icons/hi';
+import { Menu, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
+import { HiShoppingCart, HiMenu, HiX, HiUser, HiOutlineLogout, HiOutlineShoppingBag, HiOutlinePencilAlt } from 'react-icons/hi';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import EditProfileModal from '../ui/EditProfileModal';
 
 export default function Navbar() {
   const { totalItems, toggleCart } = useCart();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const navLinks = [
     { to: '/', label: 'Inicio' },
@@ -54,17 +64,83 @@ export default function Navbar() {
 
           {/* Icons Context Data */}
           <div className="flex items-center gap-2 sm:gap-4">
-            {/* User Icon */}
-            <Link
-              to={user ? "/mis-pedidos" : "/login"}
-              className="relative p-2 rounded-xl hover:bg-cream-200 transition-colors duration-200 group flex items-center justify-center"
-              title={user ? "Mi Perfil" : "Iniciar Sesión"}
-            >
-              <div className="relative">
-                <HiUser className="w-6 h-6 text-slate-dark group-hover:text-terracotta transition-colors" />
-                <span className="absolute -top-2 -right-2 text-sm drop-shadow-sm transition-transform duration-300 group-hover:rotate-45 group-hover:scale-110">🌸</span>
-              </div>
-            </Link>
+            {/* User Icon / Dropdown */}
+            {user ? (
+              <Menu as="div" className="relative inline-block text-left z-50">
+                <Menu.Button className="relative p-2 rounded-xl hover:bg-cream-200 transition-colors duration-200 group flex items-center justify-center">
+                  <div className="relative">
+                    <HiUser className="w-6 h-6 text-slate-dark group-hover:text-terracotta transition-colors" />
+                    <span className="absolute -top-2 -right-2 text-sm drop-shadow-sm transition-transform duration-300 group-hover:rotate-45 group-hover:scale-110">🌸</span>
+                  </div>
+                </Menu.Button>
+                <Transition
+                  as={Fragment}
+                  enter="transition ease-out duration-100"
+                  enterFrom="transform opacity-0 scale-95"
+                  enterTo="transform opacity-100 scale-100"
+                  leave="transition ease-in duration-75"
+                  leaveFrom="transform opacity-100 scale-100"
+                  leaveTo="transform opacity-0 scale-95"
+                >
+                  <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-cream-200 rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <div className="px-4 py-3">
+                      <p className="text-sm text-slate-mid">Bienvenido,</p>
+                      <p className="text-sm font-bold text-slate-dark truncate">
+                        {user.username ? (user.username.length > 8 ? user.username.substring(0, 8) + '...' : user.username) : 'Usuario'}
+                      </p>
+                    </div>
+                    <div className="px-1 py-1">
+                      <Menu.Item>
+                        {({ active }) => (
+                          <Link
+                            to="/mis-pedidos"
+                            className={`${active ? 'bg-cream-100 text-terracotta' : 'text-slate-dark'} group flex w-full items-center rounded-md px-2 py-2 text-sm font-medium transition-colors`}
+                          >
+                            <HiOutlineShoppingBag className="mr-2 h-5 w-5" aria-hidden="true" />
+                            Mis Pedidos
+                          </Link>
+                        )}
+                      </Menu.Item>
+                      <Menu.Item>
+                        {({ active }) => (
+                          <button
+                            onClick={() => setIsProfileOpen(true)}
+                            className={`${active ? 'bg-cream-100 text-terracotta' : 'text-slate-dark'} group flex w-full items-center rounded-md px-2 py-2 text-sm font-medium transition-colors`}
+                          >
+                            <HiOutlinePencilAlt className="mr-2 h-5 w-5" aria-hidden="true" />
+                            Editar Perfil
+                          </button>
+                        )}
+                      </Menu.Item>
+                    </div>
+                    <div className="px-1 py-1">
+                      <Menu.Item>
+                        {({ active }) => (
+                          <button
+                            onClick={handleLogout}
+                            className={`${active ? 'bg-warmred/10 text-warmred' : 'text-slate-mid'} group flex w-full items-center rounded-md px-2 py-2 text-sm font-medium transition-colors`}
+                          >
+                            <HiOutlineLogout className="mr-2 h-5 w-5" aria-hidden="true" />
+                            Cerrar Sesión
+                          </button>
+                        )}
+                      </Menu.Item>
+                    </div>
+                  </Menu.Items>
+                </Transition>
+              </Menu>
+            ) : (
+              <Link
+                to="/login"
+                className="relative p-2 rounded-xl hover:bg-cream-200 transition-colors duration-200 group flex items-center justify-center"
+                title="Iniciar Sesión"
+              >
+                <div className="relative">
+                  <HiUser className="w-6 h-6 text-slate-dark group-hover:text-terracotta transition-colors" />
+                  <span className="absolute -top-2 -right-2 text-sm drop-shadow-sm transition-transform duration-300 group-hover:rotate-45 group-hover:scale-110">🌸</span>
+                </div>
+              </Link>
+            )}
 
             {/* Cart toggle */}
             <button
@@ -130,6 +206,7 @@ export default function Navbar() {
           )}
         </AnimatePresence>
       </div>
+      <EditProfileModal isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
     </nav>
   );
 }

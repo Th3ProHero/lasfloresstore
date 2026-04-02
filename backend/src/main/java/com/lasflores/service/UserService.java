@@ -14,10 +14,14 @@ public class UserService {
     private final UserRepository userRepository;
 
     @Transactional
-    public AppUser updateProfile(Long userId, String email, String phone) {
+    public AppUser updateProfile(Long userId, String nombre, String email, String phone) {
         AppUser user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + userId));
         
+        if (nombre != null && !nombre.isBlank()) {
+            user.setNombre(nombre);
+        }
+
         if (email != null && !email.isBlank()) {
             // Check if email already taken by another user
             userRepository.findByCorreo(email).ifPresent(other -> {

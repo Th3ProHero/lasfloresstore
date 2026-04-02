@@ -22,9 +22,9 @@ const LoginPage = () => {
     setLoading(true);
     try {
       const data = await apiLogin(formData);
-      const { token, userId, username, role } = data;
-      login({ userId, username, role }, token);
-      navigate(-1); // Go back to where we came from (e.g., checkout)
+      const { token, userId, username, role, correo, celular } = data;
+      login({ userId, username, role, correo, celular }, token);
+      navigate('/', { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || err.response?.data?.message || 'Credenciales incorrectas. Intenta de nuevo.');
     } finally {

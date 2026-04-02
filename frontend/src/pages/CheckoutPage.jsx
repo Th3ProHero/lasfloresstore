@@ -41,11 +41,8 @@ export default function CheckoutPage() {
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
   const [form, setForm] = useState({ 
     name: user?.username || '', 
-    email: user?.userId ? user.username : '', // In my AuthContext, username was used for display, but email is the login. 
-    // Wait, let's check AuthContext login call. 
-    // In AuthController, username is user.getNombre(). 
-    // I should check if I have email in user object. 
-    phone: '', 
+    email: user?.correo || '', 
+    phone: user?.celular || '', 
     notas: '' 
   });
 
@@ -55,8 +52,8 @@ export default function CheckoutPage() {
       setForm(prev => ({
         ...prev,
         name: user.username || prev.name,
-        // We don't have email/phone in the basic user object from LoginPage yet, 
-        // we might want to fetch full profile or just let them fill it if not there.
+        email: user.correo || prev.email,
+        phone: user.celular || prev.phone
       }));
     }
   }, [user]);
@@ -279,12 +276,12 @@ export default function CheckoutPage() {
                 <input
                   type="text"
                   value={form.name}
+                  readOnly={!!user}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="Tu nombre completo"
-                  className="w-full px-4 py-3 bg-cream-50 border border-cream-300 rounded-xl text-sm
-                           text-slate-dark placeholder-slate-light
-                           focus:outline-none focus:ring-2 focus:ring-terracotta/30 focus:border-terracotta
-                           transition-all duration-200"
+                  className={`w-full px-4 py-3 border border-cream-300 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-terracotta/30 focus:border-terracotta ${
+                    user ? 'bg-cream-200 text-slate-mid cursor-not-allowed' : 'bg-cream-50 text-slate-dark placeholder-slate-light'
+                  }`}
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -295,12 +292,12 @@ export default function CheckoutPage() {
                   <input
                     type="email"
                     value={form.email}
+                    readOnly={!!user}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     placeholder="correo@ejemplo.com"
-                    className="w-full px-4 py-3 bg-cream-50 border border-cream-300 rounded-xl text-sm
-                             text-slate-dark placeholder-slate-light
-                             focus:outline-none focus:ring-2 focus:ring-terracotta/30 focus:border-terracotta
-                             transition-all duration-200"
+                    className={`w-full px-4 py-3 border border-cream-300 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-terracotta/30 focus:border-terracotta ${
+                      user ? 'bg-cream-200 text-slate-mid cursor-not-allowed' : 'bg-cream-50 text-slate-dark placeholder-slate-light'
+                    }`}
                   />
                 </div>
                 <div>
@@ -310,12 +307,12 @@ export default function CheckoutPage() {
                   <input
                     type="tel"
                     value={form.phone}
+                    readOnly={!!user}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     placeholder="55 1234 5678"
-                    className="w-full px-4 py-3 bg-cream-50 border border-cream-300 rounded-xl text-sm
-                             text-slate-dark placeholder-slate-light
-                             focus:outline-none focus:ring-2 focus:ring-terracotta/30 focus:border-terracotta
-                             transition-all duration-200"
+                    className={`w-full px-4 py-3 border border-cream-300 rounded-xl text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-terracotta/30 focus:border-terracotta ${
+                      user ? 'bg-cream-200 text-slate-mid cursor-not-allowed' : 'bg-cream-50 text-slate-dark placeholder-slate-light'
+                    }`}
                   />
                 </div>
               </div>

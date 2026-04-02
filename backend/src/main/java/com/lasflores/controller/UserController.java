@@ -18,9 +18,10 @@ public class UserController {
     @PutMapping("/{userId}/profile")
     public ResponseEntity<?> updateProfile(@PathVariable Long userId, @RequestBody Map<String, String> request) {
         try {
-            AppUser updated = userService.updateProfile(userId, request.get("correo"), request.get("celular"));
+            AppUser updated = userService.updateProfile(userId, request.get("nombre"), request.get("correo"), request.get("celular"));
             return ResponseEntity.ok(Map.of(
                 "message", "Perfil actualizado con éxito",
+                "nombre", updated.getNombre(),
                 "correo", updated.getCorreo(),
                 "celular", updated.getCelular() != null ? updated.getCelular() : ""
             ));

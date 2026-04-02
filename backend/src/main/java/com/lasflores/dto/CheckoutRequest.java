@@ -1,9 +1,11 @@
 package com.lasflores.dto;
 
 import com.lasflores.entity.MetodoPago;
+import com.lasflores.entity.OrderTipo;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -29,4 +31,12 @@ public class CheckoutRequest {
     private List<CartItemDTO> items;
 
     private String notas;
+
+    // ─── Special order fields (optional) ───
+    @Builder.Default
+    private OrderTipo tipoOrden = OrderTipo.REGULAR;
+
+    private LocalDate fechaEvento;   // Fecha para la cual se necesita el pedido
+
+    private Integer cantidadPersonas; // Estimado de personas para el evento
 }

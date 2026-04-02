@@ -15,13 +15,13 @@ import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
+    // ─── Catalog (excluding special products) ────────────
+
+    Page<Product> findByEsEspecialFalse(Pageable pageable);
+
     Page<Product> findByCategoria(Categoria categoria, Pageable pageable);
 
-    Page<Product> findByMarcaContainingIgnoreCase(String marca, Pageable pageable);
-
-    Page<Product> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
-
-    @Query("SELECT p FROM Product p WHERE " +
+    @Query("SELECT p FROM Product p WHERE p.esEspecial = false AND " +
            "p.categoria = :categoria AND " +
            "LOWER(p.marca) LIKE LOWER(CONCAT('%', :marca, '%')) AND " +
            "LOWER(p.nombre) LIKE LOWER(CONCAT('%', :search, '%'))")
@@ -32,7 +32,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         Pageable pageable
     );
 
-    @Query("SELECT p FROM Product p WHERE " +
+    @Query("SELECT p FROM Product p WHERE p.esEspecial = false AND " +
            "LOWER(p.marca) LIKE LOWER(CONCAT('%', :marca, '%')) AND " +
            "LOWER(p.nombre) LIKE LOWER(CONCAT('%', :search, '%'))")
     Page<Product> findByFiltersAllCategorias(
@@ -41,7 +41,13 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
         Pageable pageable
     );
 
-    Page<Product> findByEnOfertaTrue(Pageable pageable);
+    Page<Product> findByEnOfertaTrueAndEsEspecialFalse(Pageable pageable);
+
+    // ─── Special products ─────────────────────────────────
+
+    Page<Product> findByEsEspecialTrue(Pageable pageable);
+
+    // ─── Stock & misc ─────────────────────────────────────
 
     @Query("SELECT p FROM Product p WHERE p.numInventario < :threshold")
     List<Product> findLowStockProducts(@Param("threshold") int threshold);
@@ -52,4 +58,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Modifying
     @Query("UPDATE Product p SET p.numInventario = p.numInventario - :qty WHERE p.id = :id AND p.numInventario >= :qty")
     int decrementStock(@Param("id") Long id, @Param("qty") int qty);
+
+    @Modifying
+    @Query("UPDATE Product p SET p.numInventario = p.numInventario + :qty WHERE p.id = :id")
+    int incrementStock(@Param("id") Long id, @Param("qty") int qty);
 }

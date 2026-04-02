@@ -24,7 +24,7 @@ public class ProductService {
     // ─── READ ─────────────────────────────────────────────
 
     public Page<ProductDTO> getAllProducts(Pageable pageable) {
-        return productRepository.findAll(pageable).map(this::toDTO);
+        return productRepository.findByEsEspecialFalse(pageable).map(this::toDTO);
     }
 
     public Page<ProductDTO> getFilteredProducts(Categoria categoria, String marca, String search, Pageable pageable) {
@@ -39,7 +39,11 @@ public class ProductService {
     }
 
     public Page<ProductDTO> getProductsOnSale(Pageable pageable) {
-        return productRepository.findByEnOfertaTrue(pageable).map(this::toDTO);
+        return productRepository.findByEnOfertaTrueAndEsEspecialFalse(pageable).map(this::toDTO);
+    }
+
+    public Page<ProductDTO> getProductosEspeciales(Pageable pageable) {
+        return productRepository.findByEsEspecialTrue(pageable).map(this::toDTO);
     }
 
     public ProductDTO getProductById(Long id) {
@@ -61,6 +65,7 @@ public class ProductService {
                 .precio(dto.getPrecio())
                 .categoria(dto.getCategoria())
                 .enOferta(dto.getEnOferta() != null ? dto.getEnOferta() : false)
+                .esEspecial(dto.getEsEspecial() != null ? dto.getEsEspecial() : false)
                 .porcentajeDescuento(dto.getPorcentajeDescuento() != null ? dto.getPorcentajeDescuento() : 0)
                 .descripcion(dto.getDescripcion())
                 .numInventario(dto.getNumInventario())
@@ -81,6 +86,7 @@ public class ProductService {
         product.setPrecio(dto.getPrecio());
         product.setCategoria(dto.getCategoria());
         product.setEnOferta(dto.getEnOferta());
+        product.setEsEspecial(dto.getEsEspecial() != null ? dto.getEsEspecial() : false);
         product.setPorcentajeDescuento(dto.getPorcentajeDescuento());
         product.setDescripcion(dto.getDescripcion());
         product.setNumInventario(dto.getNumInventario());
@@ -138,6 +144,7 @@ public class ProductService {
                 .precioFinal(p.getPrecioFinal())
                 .categoria(p.getCategoria())
                 .enOferta(p.getEnOferta())
+                .esEspecial(p.getEsEspecial())
                 .porcentajeDescuento(p.getPorcentajeDescuento())
                 .descripcion(p.getDescripcion())
                 .numInventario(p.getNumInventario())

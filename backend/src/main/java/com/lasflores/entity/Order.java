@@ -3,6 +3,7 @@ package com.lasflores.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +58,17 @@ public class Order {
 
     @Column(columnDefinition = "TEXT")
     private String notas;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_orden", nullable = false)
+    @Builder.Default
+    private OrderTipo tipoOrden = OrderTipo.REGULAR;
+
+    @Column(name = "fecha_evento")
+    private LocalDate fechaEvento;
+
+    @Column(name = "cantidad_personas")
+    private Integer cantidadPersonas;
 
     public void addItem(OrderItem item) {
         items.add(item);

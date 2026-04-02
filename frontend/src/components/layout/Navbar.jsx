@@ -23,6 +23,7 @@ export default function Navbar() {
   const navLinks = [
     { to: '/', label: 'Inicio' },
     { to: '/catalogo', label: 'Catálogo' },
+    { to: '/pedidos-especiales', label: '🎉 Pedidos Especiales' },
   ];
 
   return (

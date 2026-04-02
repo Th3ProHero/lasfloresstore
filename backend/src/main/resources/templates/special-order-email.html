@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${title}">Pedido Especial Las Flores</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: #f5f1e8; color: #3a3a3a; }
+    .wrapper { width: 100%; padding: 40px 16px; }
+    .card { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 30px rgba(0,0,0,0.1); }
+
+    /* Header */
+    .header { background: linear-gradient(135deg, #7a3b00 0%, #a0520a 60%, #c46a10 100%); padding: 36px 32px 28px; text-align: center; position: relative; overflow: hidden; }
+    .header::before { content: ''; position: absolute; top: -30px; right: -30px; width: 140px; height: 140px; background: rgba(255,200,80,0.12); border-radius: 50%; }
+    .header-icon { font-size: 44px; display: block; margin-bottom: 10px; }
+    .header h1 { color: #fff; font-size: 22px; font-weight: 800; letter-spacing: 1px; margin-bottom: 4px; }
+    .header .subtitle { color: rgba(255,255,255,0.75); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+    .gold-bar { height: 4px; background: linear-gradient(90deg, transparent, #f0c040, #ffd966, #f0c040, transparent); }
+
+    .body { padding: 28px 32px 8px; }
+
+    /* Folio hero */
+    .folio-hero { background: linear-gradient(135deg, #fff9ee, #fff3d0); border: 1px solid #f0d080; border-radius: 12px; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    .folio-left .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #9a7020; font-weight: 700; }
+    .folio-left .num { font-size: 22px; font-weight: 900; color: #7a3b00; letter-spacing: 1px; }
+    .badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; background: #fff4d0; color: #8a5a00; border: 1px solid #f0d080; }
+
+    /* Greeting */
+    .greeting { font-size: 15px; line-height: 1.65; color: #3a3a3a; margin-bottom: 20px; }
+    .greeting strong { color: #7a3b00; }
+
+    /* Policy box */
+    .policy-box { background: #fffbf0; border-left: 4px solid #f0c040; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; }
+    .policy-box .policy-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #7a5000; margin-bottom: 10px; }
+    .policy-row { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: #5a4000; margin-bottom: 6px; line-height: 1.5; }
+    .policy-row:last-child { margin-bottom: 0; }
+    .policy-row .pi { flex-shrink: 0; font-size: 14px; }
+
+    /* Meta chips */
+    .chips { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    .chip { flex: 1; min-width: 120px; background: #f9f6ee; border: 1px solid #ece8da; border-radius: 10px; padding: 10px 14px; text-align: center; }
+    .chip .cl { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #9a8a6a; font-weight: 700; display: block; margin-bottom: 3px; }
+    .chip .cv { font-size: 13px; font-weight: 700; color: #3a3a3a; }
+
+    /* Section title */
+    .sec-title { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #9a8060; font-weight: 700; border-bottom: 1px solid #ece8da; padding-bottom: 8px; margin-bottom: 14px; }
+
+    /* Items */
+    .items { margin-bottom: 20px; }
+    .item-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px dashed #ece8da; }
+    .item-row:last-child { border-bottom: none; }
+    .item-icon { width: 36px; height: 36px; background: linear-gradient(135deg, #a0520a, #c46a10); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #fff; flex-shrink: 0; }
+    .item-name { flex: 1; font-size: 14px; font-weight: 600; color: #2a2a2a; }
+    .item-variant { font-size: 11px; color: #8a7a6a; font-style: italic; }
+    .item-price { font-size: 14px; font-weight: 700; color: #a0520a; text-align: right; }
+    .item-qty { font-size: 11px; color: #9a8a7a; }
+
+    /* Total */
+    .total-block { background: linear-gradient(135deg, #7a3b00, #a0520a); border-radius: 12px; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 8px; }
+    .total-block .tl { color: rgba(255,255,255,0.75); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; }
+    .total-block .tv { color: #ffd966; font-size: 26px; font-weight: 900; }
+
+    /* Customer */
+    .customer { background: #f9f6ee; border: 1px solid #ece8da; border-radius: 12px; padding: 16px 18px; margin-bottom: 20px; }
+    .cust-row { display: flex; gap: 8px; font-size: 13px; margin-bottom: 6px; }
+    .cust-row:last-child { margin-bottom: 0; }
+    .cust-row .cl { color: #8a7a5a; font-weight: 600; min-width: 78px; }
+
+    /* Notes */
+    .notes { background: #fffbf0; border: 1px dashed #f0d080; border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: #6a5020; font-style: italic; }
+    .notes strong { font-style: normal; color: #5a3800; }
+
+    /* Next steps */
+    .steps { background: #f0faf4; border: 1px solid #c0e8cc; border-radius: 12px; padding: 16px 18px; margin-bottom: 20px; }
+    .steps-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #2a6a3a; margin-bottom: 10px; }
+    .step-row { display: flex; gap: 10px; font-size: 13px; color: #2a4a2a; margin-bottom: 8px; align-items: flex-start; }
+    .step-row:last-child { margin-bottom: 0; }
+    .step-num { width: 22px; height: 22px; background: #4a9a5a; border-radius: 50%; color: #fff; font-weight: 800; font-size: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    /* Admin */
+    .admin-box { background: #fff8e6; border-left: 4px solid #f0c040; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; font-size: 13px; color: #6a4e00; }
+
+    /* Footer */
+    .footer { background: #f4edd8; border-top: 1px solid #e0d8c0; padding: 22px 32px; text-align: center; }
+    .store-name { font-size: 14px; font-weight: 700; color: #7a3b00; margin-bottom: 4px; }
+    .footer-sub { font-size: 11px; color: #9a8a6a; }
+    .divider { height: 1px; background: linear-gradient(90deg, transparent, #d0c0a0, transparent); margin: 12px 0; }
+
+    @media (max-width: 540px) {
+      .body { padding: 20px 18px 8px; }
+      .folio-hero { flex-direction: column; }
+      .chips { flex-direction: column; }
+      .total-block { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="card">
+
+    <div class="header">
+      <span class="header-icon">🎉</span>
+      <h1 th:text="${isAdmin} ? 'Nueva Solicitud Especial' : 'Solicitud de Pedido Especial Recibida'">Pedido Especial</h1>
+      <p class="subtitle">Las Flores · Pedidos para Eventos</p>
+    </div>
+    <div class="gold-bar"></div>
+
+    <div class="body">
+
+      <!-- Greeting -->
+      <p class="greeting" th:if="${!isAdmin}">
+        Hola <strong th:text="${order.customerName}">Cliente</strong>, recibimos tu solicitud de pedido especial.
+        Comunícate con nosotros o <strong>acude a la sucursal</strong> para confirmar los detalles y coordinar el pago en efectivo.
+      </p>
+      <p class="greeting" th:if="${isAdmin}">
+        Nueva solicitud de pedido especial de <strong th:text="${order.customerName}">Cliente</strong>.
+        Contacta al cliente para confirmar disponibilidad y coordinar el pago.
+      </p>
+
+      <!-- Folio hero -->
+      <div class="folio-hero">
+        <div class="folio-left">
+          <div class="lbl">Folio del Evento</div>
+          <div class="num" th:text="${order.orderNumber}">FLORES-EVENT-0001</div>
+        </div>
+        <span class="badge">⏳ En espera de confirmación</span>
+      </div>
+
+      <!-- Policy Box -->
+      <div class="policy-box" th:if="${!isAdmin}">
+        <div class="policy-title">📋 Políticas del Pedido Especial</div>
+        <div class="policy-row">
+          <span class="pi">📅</span>
+          <span><strong>2 días mínimos</strong> de anticipación para confirmar disponibilidad en sucursal.</span>
+        </div>
+        <div class="policy-row">
+          <span class="pi">🚚</span>
+          <span><strong>5 días mínimos</strong> para garantizar entrega completa del pedido.</span>
+        </div>
+        <div class="policy-row">
+          <span class="pi">💵</span>
+          <span>El pago se realiza <strong>en efectivo en la sucursal</strong> al confirmar tu pedido.</span>
+        </div>
+        <div class="policy-row">
+          <span class="pi">↩️</span>
+          <span>Si un artículo no está disponible, se te <strong>reembolsará</strong> el importe correspondiente.</span>
+        </div>
+        <div class="policy-row">
+          <span class="pi">⚠️</span>
+          <span>Si no se confirma el pedido <strong>el día anterior</strong> a la fecha del evento, la solicitud será cancelada automáticamente.</span>
+        </div>
+      </div>
+
+      <!-- Meta chips -->
+      <div class="chips">
+        <div class="chip">
+          <span class="cl">📅 Fecha del Evento</span>
+          <span class="cv" th:text="${order.fechaEvento != null} ? ${#temporals.format(order.fechaEvento, 'dd MMM yyyy')} : 'No especificada'">—</span>
+        </div>
+        <div class="chip" th:if="${order.cantidadPersonas != null}">
+          <span class="cl">👥 Personas</span>
+          <span class="cv" th:text="${order.cantidadPersonas} + ' aprox.'">—</span>
+        </div>
+        <div class="chip">
+          <span class="cl">📦 Folio</span>
+          <span class="cv" th:text="${order.orderNumber}">—</span>
+        </div>
+      </div>
+
+      <!-- Items -->
+      <div class="items">
+        <div class="sec-title">🛒 Artículos Solicitados</div>
+        <div th:each="item : ${order.items}" class="item-row">
+          <div class="item-icon" th:text="${#strings.substring(item.productName, 0, 1)}">P</div>
+          <div style="flex:1">
+            <div class="item-name" th:text="${item.productName}">Producto</div>
+            <div class="item-variant" th:if="${item.variantSabor != null}" th:text="'Variedad: ' + ${item.variantSabor}"></div>
+          </div>
+          <div style="text-align:right">
+            <div class="item-price" th:text="'$' + ${#numbers.formatDecimal(item.subtotal, 1, 2)}">$0.00</div>
+            <div class="item-qty" th:text="${item.cantidad} + ' ud.'">1 ud.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total -->
+      <div class="total-block">
+        <span class="tl">Total Estimado</span>
+        <span class="tv" th:text="'$' + ${#numbers.formatDecimal(order.total, 1, 2)}">$0.00</span>
+      </div>
+
+      <!-- Customer -->
+      <div class="customer">
+        <div class="sec-title">👤 Datos del Cliente</div>
+        <div class="cust-row"><span class="cl">Nombre:</span><span th:text="${order.customerName}">—</span></div>
+        <div class="cust-row" th:if="${order.customerEmail != null}"><span class="cl">Correo:</span><span th:text="${order.customerEmail}">—</span></div>
+        <div class="cust-row" th:if="${order.customerPhone != null}"><span class="cl">Teléfono:</span><span th:text="${order.customerPhone}">—</span></div>
+      </div>
+
+      <!-- Notes -->
+      <div class="notes" th:if="${order.notas != null and !order.notas.empty}">
+        <strong>📝 Notas / Instrucciones:</strong><br/>
+        <span th:text="${order.notas}">Sin notas.</span>
+      </div>
+
+      <!-- Next steps for user -->
+      <div class="steps" th:if="${!isAdmin}">
+        <div class="steps-title">✅ Próximos Pasos</div>
+        <div class="step-row"><div class="step-num">1</div><span>Acude a la sucursal para confirmar disponibilidad y coordinar detalles.</span></div>
+        <div class="step-row"><div class="step-num">2</div><span>Realiza tu pago en efectivo en la sucursal para reservar tu pedido.</span></div>
+        <div class="step-row"><div class="step-num">3</div><span>Recibirás una confirmación por correo cuando tu pedido esté confirmado.</span></div>
+      </div>
+
+      <!-- Admin box -->
+      <div class="admin-box" th:if="${isAdmin}">
+        ⭐ <strong>Acción requerida:</strong> Contacta al cliente para confirmar disponibilidad de los artículos y coordina el pago en efectivo.
+        Usa el folio <strong th:text="${order.orderNumber}">FLORES-EVENT-0001</strong> para gestionar el pedido en el panel de administración.
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <div class="store-name">🌸 Las Flores · Abarrotes &amp; Más</div>
+      <div class="divider"></div>
+      <div class="footer-sub">Este es un correo automático, por favor no respondas directamente.<br>© 2024 Las Flores Store.</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

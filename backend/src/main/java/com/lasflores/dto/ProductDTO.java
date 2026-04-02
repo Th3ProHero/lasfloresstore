@@ -16,6 +16,7 @@ public class ProductDTO {
     private BigDecimal precioFinal;
     private Categoria categoria;
     private Boolean enOferta;
+    private Boolean esEspecial;
     private Integer porcentajeDescuento;
     private String descripcion;
     private Integer numInventario;

@@ -12,6 +12,7 @@ const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const OrderHistoryPage = lazy(() => import('./pages/OrderHistoryPage'));
+const SpecialOrderPage = lazy(() => import('./pages/SpecialOrderPage'));
 const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 
@@ -43,6 +44,7 @@ export default function App() {
                 <Route path="login" element={<LoginPage />} />
                 <Route path="registro" element={<RegisterPage />} />
                 <Route path="mis-pedidos" element={<ProtectedRoute><OrderHistoryPage /></ProtectedRoute>} />
+                <Route path="pedidos-especiales" element={<SpecialOrderPage />} />
               </Route>
               
               {/* Admin Routes */}

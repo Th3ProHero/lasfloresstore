@@ -54,6 +54,14 @@ public class ProductController {
         return ResponseEntity.ok(productService.getProductsOnSale(PageRequest.of(page, size)));
     }
 
+    @GetMapping("/especiales")
+    public ResponseEntity<Page<ProductDTO>> getProductosEspeciales(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return ResponseEntity.ok(productService.getProductosEspeciales(PageRequest.of(page, size)));
+    }
+
     @GetMapping("/marcas")
     public ResponseEntity<List<String>> getAllMarcas() {
         return ResponseEntity.ok(productService.getAllMarcas());

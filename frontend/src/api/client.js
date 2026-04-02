@@ -30,6 +30,9 @@ export const updateProduct = (id, data) =>
 export const getProductsOnSale = (params = {}) =>
   client.get('/products/ofertas', { params }).then((r) => r.data);
 
+export const getProductosEspeciales = (params = {}) =>
+  client.get('/products/especiales', { params }).then((r) => r.data);
+
 export const getMarcas = () =>
   client.get('/products/marcas').then((r) => r.data);
 

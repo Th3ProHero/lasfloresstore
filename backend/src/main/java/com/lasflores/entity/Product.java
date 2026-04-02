@@ -35,6 +35,10 @@ public class Product {
     @Builder.Default
     private Boolean enOferta = false;
 
+    @Column(name = "es_especial")
+    @Builder.Default
+    private Boolean esEspecial = false;
+
     @Column(name = "porcentaje_descuento")
     @Builder.Default
     private Integer porcentajeDescuento = 0;

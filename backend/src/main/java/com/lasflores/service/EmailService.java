@@ -64,6 +64,57 @@ public class EmailService {
         }
     }
 
+    @Async
+    public void sendSpecialOrderConfirmationToUser(Order order) {
+        if (order.getCustomerEmail() == null || order.getCustomerEmail().isBlank()) {
+            log.warn("Pedido especial {} sin correo de cliente", order.getOrderNumber());
+            return;
+        }
+        try {
+            Context context = new Context();
+            context.setVariable("order", order);
+            context.setVariable("title", "Solicitud de Pedido Especial - " + order.getOrderNumber());
+            context.setVariable("isAdmin", false);
+
+            String process = templateEngine.process("special-order-email", context);
+            sendHtmlEmail(order.getCustomerEmail(), "Solicitud de Pedido Especial " + order.getOrderNumber() + " - Las Flores", process);
+            log.info("Email especial enviado al usuario: {}", order.getCustomerEmail());
+        } catch (Exception e) {
+            log.error("Error al enviar email especial al usuario: {}", e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendSpecialOrderNotificationToAdmin(Order order) {
+        try {
+            Context context = new Context();
+            context.setVariable("order", order);
+            context.setVariable("title", "Nueva Solicitud Especial - " + order.getOrderNumber());
+            context.setVariable("isAdmin", true);
+
+            String process = templateEngine.process("special-order-email", context);
+            sendHtmlEmail(adminEmail, "⭐ Pedido Especial: " + order.getOrderNumber() + " - Las Flores", process);
+            log.info("Email especial enviado al admin: {}", adminEmail);
+        } catch (Exception e) {
+            log.error("Error al enviar email especial al admin: {}", e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendSpecialOrderCancelledEmail(Order order) {
+        if (order.getCustomerEmail() == null || order.getCustomerEmail().isBlank()) return;
+        try {
+            Context context = new Context();
+            context.setVariable("order", order);
+            String process = templateEngine.process("special-order-cancelled-email", context);
+            sendHtmlEmail(order.getCustomerEmail(),
+                    "Pedido Especial Cancelado: " + order.getOrderNumber() + " - Las Flores", process);
+            log.info("Email de cancelación enviado a {}", order.getCustomerEmail());
+        } catch (Exception e) {
+            log.error("Error al enviar email de cancelación: {}", e.getMessage());
+        }
+    }
+
     private void sendHtmlEmail(String to, String subject, String htmlBody) throws MessagingException {
         MimeMessage message = emailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");

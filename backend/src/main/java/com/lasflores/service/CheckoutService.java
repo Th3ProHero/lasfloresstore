@@ -37,19 +37,25 @@ public class CheckoutService {
                 ? request.getCustomerName()
                 : user.getNombre();
 
+        boolean esEspecial = OrderTipo.ESPECIAL.equals(request.getTipoOrden());
+
         Order order = Order.builder()
                 .user(user)
-                .orderNumber("PENDING") // Will update after first save
+                .orderNumber("PENDING")
                 .customerName(customerName)
                 .customerEmail(customerEmail)
                 .customerPhone(request.getCustomerPhone())
                 .metodoPago(request.getMetodoPago())
-                .status(OrderStatus.PENDING)
+                .status(esEspecial ? OrderStatus.AWAITING_CONFIRMATION : OrderStatus.PENDING)
                 .total(BigDecimal.ZERO)
                 .notas(request.getNotas())
+                .tipoOrden(esEspecial ? OrderTipo.ESPECIAL : OrderTipo.REGULAR)
+                .fechaEvento(request.getFechaEvento())
+                .cantidadPersonas(request.getCantidadPersonas())
                 .build();
 
-        log.info("Procesando checkout para usuario {} | email: {} | nombre: {}", user.getId(), customerEmail, customerName);
+        log.info("Procesando checkout [{}] para usuario {} | email: {} | nombre: {}",
+                esEspecial ? "ESPECIAL" : "REGULAR", user.getId(), customerEmail, customerName);
 
         BigDecimal total = BigDecimal.ZERO;
 
@@ -127,23 +133,30 @@ public class CheckoutService {
 
         // Save order to get ID
         Order savedOrder = orderRepository.save(order);
-        
-        // Generate and set order number: FLORES-0000 format
-        String orderNumber = String.format("FLORES-%04d", savedOrder.getId());
+
+        // Generate order number
+        String orderNumber = esEspecial
+                ? String.format("FLORES-EVENT-%04d", savedOrder.getId())
+                : String.format("FLORES-%04d", savedOrder.getId());
         savedOrder.setOrderNumber(orderNumber);
-        
-        // Final save with order number
         savedOrder = orderRepository.save(savedOrder);
 
         // Send emails
-        emailService.sendOrderConfirmationToUser(savedOrder);
-        emailService.sendOrderNotificationToAdmin(savedOrder);
+        if (esEspecial) {
+            emailService.sendSpecialOrderConfirmationToUser(savedOrder);
+            emailService.sendSpecialOrderNotificationToAdmin(savedOrder);
+        } else {
+            emailService.sendOrderConfirmationToUser(savedOrder);
+            emailService.sendOrderNotificationToAdmin(savedOrder);
+        }
 
-        String message = switch (request.getMetodoPago()) {
-            case SPEI -> "Orden " + orderNumber + " creada. Realiza tu transferencia SPEI y envía el comprobante.";
-            case TARJETA -> "Orden " + orderNumber + " creada. Procesando pago con tarjeta.";
-            case EFECTIVO -> "Orden " + orderNumber + " confirmada. Paga en efectivo al recoger tu pedido.";
-        };
+        String message = esEspecial
+                ? "Solicitud de pedido especial " + orderNumber + " recibida. Por favor acude a la sucursal para confirmar los detalles y pagar."
+                : switch (request.getMetodoPago()) {
+                    case SPEI -> "Orden " + orderNumber + " creada. Realiza tu transferencia SPEI y envía el comprobante.";
+                    case TARJETA -> "Orden " + orderNumber + " creada. Procesando pago con tarjeta.";
+                    case EFECTIVO -> "Orden " + orderNumber + " confirmada. Paga en efectivo al recoger tu pedido.";
+                };
 
         return CheckoutResponse.builder()
                 .orderId(savedOrder.getId())

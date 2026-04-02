@@ -26,6 +26,9 @@ public class ProductCreateDTO {
     @lombok.Builder.Default
     private Boolean enOferta = false;
 
+    @lombok.Builder.Default
+    private Boolean esEspecial = false;
+
     @Min(value = 0, message = "El descuento no puede ser negativo")
     @Max(value = 100, message = "El descuento no puede exceder 100%")
     @lombok.Builder.Default

@@ -392,7 +392,10 @@ export default function CheckoutPage() {
                 className="mt-1 w-5 h-5 text-terracotta border-cream-300 rounded focus:ring-terracotta cursor-pointer"
               />
               <label htmlFor="terms" className="text-sm text-slate-mid cursor-pointer select-none">
-                He leído y acepto los <button type="button" onClick={(e) => { e.preventDefault(); setShowTermsModal(true); }} className="text-terracotta font-semibold hover:underline">Términos y Condiciones</button> para proceder con la compra.
+                He leído y acepto los{' '}
+                <button type="button" onClick={(e) => { e.preventDefault(); setShowTermsModal(true); }} className="text-terracotta font-semibold hover:underline">Términos y Condiciones</button>
+                {' '}<a href="/terminos" target="_blank" rel="noopener noreferrer" className="text-xs text-slate-light hover:underline">(ver página completa)</a>
+                {' '}para proceder con la compra.
               </label>
             </div>
 

@@ -36,9 +36,20 @@ const OrderHistoryPage = () => {
     if (user?.userId) fetchOrders();
   }, [user, fetchOrders]);
 
-  /** Re-add all items from a completed/delivered order to cart */
+  /** Re-add all items from a completed/delivered order to cart.
+   *  Special orders redirect to the special-order page instead. */
   const handleReorder = (order) => {
     if (!order.items?.length) return;
+
+    // If it was a special order, send to the special order page
+    if (order.tipoOrden === 'ESPECIAL') {
+      if (window.confirm('Este era un pedido especial. ¿Quieres ir a la página de Pedidos Especiales para crear uno nuevo?')) {
+        navigate('/pedidos-especiales');
+      }
+      return;
+    }
+
+    // Regular order — add all items to the global cart
     order.items.forEach(item => {
       addItem({
         id: item.productId || item.id,

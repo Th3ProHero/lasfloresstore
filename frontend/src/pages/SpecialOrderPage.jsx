@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiArrowLeft, HiCheck, HiPlusSm, HiMinusSm, HiInformationCircle } from 'react-icons/hi';
+import { HiArrowLeft, HiCheck, HiPlusSm, HiMinusSm, HiInformationCircle, HiX } from 'react-icons/hi';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { getProductosEspeciales, processCheckout } from '../api/client';
 import FlowerExplosion from '../components/ui/FlowerExplosion';
+import LegalModal from '../components/ui/LegalModal';
 
 // ── Policy banners ────────────────────────────────
 const POLICIES = [
@@ -16,7 +18,9 @@ const POLICIES = [
 
 export default function SpecialOrderPage() {
   const { user } = useAuth();
+  const { clearCart, totalItems: globalCartItems } = useCart();
   const navigate = useNavigate();
+  const [cartWasCleared, setCartWasCleared] = useState(false);
 
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -34,6 +38,8 @@ export default function SpecialOrderPage() {
   const [submitting, setSubmitting] = useState(false);
   const [orderResult, setOrderResult] = useState(null);
   const [error, setError] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   // Autocomplete when user logs in
   useEffect(() => {
@@ -55,6 +61,18 @@ export default function SpecialOrderPage() {
       .finally(() => setLoadingProducts(false));
   }, []);
 
+  // Clear the global cart on mount — special orders are a completely separate flow.
+  // If the user had items in the regular cart we clear them to avoid a
+  // mixed-checkout situation and show a dismissible notice.
+  useEffect(() => {
+    if (globalCartItems > 0) {
+      clearCart();
+      setCartWasCleared(true);
+    }
+    // intentionally run only on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const totalItems = Object.values(cart).reduce((s, v) => s + (v.qty || 0), 0);
   const totalPrice = Object.entries(cart).reduce((sum, [pid, v]) => {
     const p = products.find(pr => pr.id === Number(pid));
@@ -73,6 +91,7 @@ export default function SpecialOrderPage() {
     e.preventDefault();
     if (totalItems === 0) { setError('Agrega al menos un artículo al pedido.'); return; }
     if (!form.fechaEvento) { setError('Indica la fecha del evento.'); return; }
+    if (!termsAccepted) { setError('Debes aceptar los Términos y Condiciones para continuar.'); return; }
     if (!user) { navigate('/login'); return; }
 
     setSubmitting(true);
@@ -153,6 +172,34 @@ export default function SpecialOrderPage() {
       <Link to="/" className="inline-flex items-center gap-2 text-sm text-slate-mid hover:text-terracotta transition-colors mb-6">
         <HiArrowLeft className="w-4 h-4" /> Volver al inicio
       </Link>
+
+      {/* Banner: global cart was auto-cleared */}
+      <AnimatePresence>
+        {cartWasCleared && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="flex items-start justify-between gap-3 bg-amber-50 border border-amber-300 rounded-2xl px-4 py-3 mb-6 text-sm text-amber-800"
+          >
+            <div className="flex items-start gap-2">
+              <HiInformationCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-amber-600" />
+              <p>
+                <strong>Tu carrito regular fue vaciado.</strong> Los pedidos especiales son un proceso separado
+                y no pueden combinarse con compras del catálogo. Si deseas hacer una compra normal,
+                {' '}<Link to="/catalogo" className="underline font-semibold hover:text-amber-900">regresa al catálogo</Link>.
+              </p>
+            </div>
+            <button
+              onClick={() => setCartWasCleared(false)}
+              className="flex-shrink-0 p-1 hover:bg-amber-100 rounded-lg transition-colors"
+              aria-label="Cerrar aviso"
+            >
+              <HiX className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Hero */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-800 via-amber-700 to-orange-600 text-white p-8 sm:p-12 mb-10 shadow-xl">
@@ -330,11 +377,32 @@ export default function SpecialOrderPage() {
                 </div>
               )}
 
+              {/* Terms */}
+              <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 p-3 rounded-xl">
+                <input
+                  id="special-terms"
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={e => setTermsAccepted(e.target.checked)}
+                  className="mt-1 w-5 h-5 text-amber-600 border-cream-300 rounded focus:ring-amber-400 cursor-pointer flex-shrink-0"
+                />
+                <label htmlFor="special-terms" className="text-sm text-amber-800 cursor-pointer select-none">
+                  He leído y acepto los{' '}
+                  <button type="button" onClick={e => { e.preventDefault(); setShowTermsModal(true); }}
+                    className="font-bold underline hover:text-amber-900">
+                    Términos y Condiciones
+                  </button>
+                  {' '}<a href="/terminos" target="_blank" rel="noopener noreferrer"
+                    className="text-xs text-amber-700 hover:underline">(ver página completa)</a>
+                  {' '}para enviar este pedido especial.
+                </label>
+              </div>
+
               <motion.button
                 type="submit"
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
-                disabled={submitting || totalItems === 0}
+                disabled={submitting || totalItems === 0 || !termsAccepted}
                 className="w-full py-4 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-base"
               >
                 {submitting ? (
@@ -396,6 +464,13 @@ export default function SpecialOrderPage() {
           </div>
         </div>
       </div>
+
+      <LegalModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        type="terms_and_conditions"
+        title="Términos y Condiciones"
+      />
     </div>
   );
 }

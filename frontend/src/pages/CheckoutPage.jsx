@@ -34,7 +34,7 @@ const PAYMENT_METHODS = [
 
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart();
-  const [step, setStep] = useState(1); // 1: review, 2: info, 3: confirm
+  const [step, setStep] = useState(1); // 1: review, 2: info, 3: confirmdfs
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
   const [form, setForm] = useState({ name: '', email: '', phone: '', notas: '' });
   const [submitting, setSubmitting] = useState(false);
@@ -66,7 +66,7 @@ export default function CheckoutPage() {
     return (
       <div className="relative min-h-[80vh] py-16">
         <FlowerExplosion />
-        
+
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -84,21 +84,21 @@ export default function CheckoutPage() {
             ¡Pedido Extraordinario!
           </h2>
           <p className="text-base text-slate-mid mb-8">{orderResult.message}</p>
-          
+
           {/* TICKET DE COMPRA */}
           <div className="bg-white rounded-2xl border border-cream-300 shadow-xl overflow-hidden mb-8 text-left">
             <div className="bg-cream-100 p-6 border-b border-cream-300 flex justify-between items-center text-slate-dark relative overflow-hidden">
-               <div className="absolute top-0 right-0 text-7xl opacity-5 -translate-y-4 translate-x-4">🌸</div>
-               <div>
-                  <h3 className="font-bold text-lg">Ticket de Orden</h3>
-                  <p className="text-xs text-slate-mid">Fecha: {new Date(orderResult.createdAt).toLocaleString()}</p>
-               </div>
-               <div className="text-right">
-                  <p className="text-sm font-bold text-terracotta">#{orderResult.orderId}</p>
-                  <span className="text-xs font-semibold bg-sage text-white px-2 py-1 rounded-md uppercase">
-                    {orderResult.status === 'CONFIRMED' ? 'APROBADA' : 'PENDIENTE'}
-                  </span>
-               </div>
+              <div className="absolute top-0 right-0 text-7xl opacity-5 -translate-y-4 translate-x-4">🌸</div>
+              <div>
+                <h3 className="font-bold text-lg">Ticket de Orden</h3>
+                <p className="text-xs text-slate-mid">Fecha: {new Date(orderResult.createdAt).toLocaleString()}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-bold text-terracotta">#{orderResult.orderId}</p>
+                <span className="text-xs font-semibold bg-sage text-white px-2 py-1 rounded-md uppercase">
+                  {orderResult.status === 'CONFIRMED' ? 'APROBADA' : 'PENDIENTE'}
+                </span>
+              </div>
             </div>
 
             <div className="p-6">
@@ -106,7 +106,7 @@ export default function CheckoutPage() {
                 {finalOrderInfo?.items?.map((item, idx) => (
                   <div key={idx} className="flex justify-between items-center text-sm border-b border-dashed border-cream-200 pb-2 last:border-0">
                     <div className="flex-1">
-                      <span className="font-bold text-slate-dark mr-2">{item.cantidad}x</span> 
+                      <span className="font-bold text-slate-dark mr-2">{item.cantidad}x</span>
                       <span className="text-slate-mid">{item.nombre}</span>
                       {item.sabor && <div className="text-[11px] text-slate-light ml-6">↳ Variedad: {item.sabor}</div>}
                     </div>
@@ -159,13 +159,13 @@ export default function CheckoutPage() {
         })),
       };
       const result = await processCheckout(payload);
-      
+
       // Guardar informacion temporal para el ticket
       setFinalOrderInfo({
-         items: [...items],
-         totalPrice
+        items: [...items],
+        totalPrice
       });
-      
+
       setOrderResult(result);
       clearCart();
       // Forzar scroll al inicio para ver el ticket de éxito (ya que la URL no cambia)
@@ -351,15 +351,15 @@ export default function CheckoutPage() {
             </div>
 
             <div className="mt-6 p-4 bg-cream-50 rounded-xl border border-cream-200 flex items-start gap-3">
-              <input 
-                 type="checkbox" 
-                 id="terms" 
-                 checked={termsAccepted} 
-                 onChange={(e) => setTermsAccepted(e.target.checked)} 
-                 className="mt-1 w-5 h-5 text-terracotta border-cream-300 rounded focus:ring-terracotta cursor-pointer" 
+              <input
+                type="checkbox"
+                id="terms"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-1 w-5 h-5 text-terracotta border-cream-300 rounded focus:ring-terracotta cursor-pointer"
               />
               <label htmlFor="terms" className="text-sm text-slate-mid cursor-pointer select-none">
-                 He leído y acepto los <button type="button" onClick={(e) => { e.preventDefault(); setShowTermsModal(true); }} className="text-terracotta font-semibold hover:underline">Términos y Condiciones</button> para proceder con la compra.
+                He leído y acepto los <button type="button" onClick={(e) => { e.preventDefault(); setShowTermsModal(true); }} className="text-terracotta font-semibold hover:underline">Términos y Condiciones</button> para proceder con la compra.
               </label>
             </div>
 
@@ -385,11 +385,11 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <LegalModal 
-        isOpen={showTermsModal} 
-        onClose={() => setShowTermsModal(false)} 
-        type="terms_and_conditions" 
-        title="Términos y Condiciones" 
+      <LegalModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        type="terms_and_conditions"
+        title="Términos y Condiciones"
       />
     </div>
   );

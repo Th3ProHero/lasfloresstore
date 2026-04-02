@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiMail, FiLock, FiArrowRight } from 'react-icons/fi';
-import axios from 'axios';
+import { login as apiLogin } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
@@ -21,12 +21,12 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:8080/api/auth/login', formData);
-      const { token, userId, username, role } = response.data;
+      const data = await apiLogin(formData);
+      const { token, userId, username, role } = data;
       login({ userId, username, role }, token);
       navigate(-1); // Go back to where we came from (e.g., checkout)
     } catch (err) {
-      setError(err.response?.data?.error || 'Credenciales incorrectas. Intenta de nuevo.');
+      setError(err.response?.data?.error || err.response?.data?.message || 'Credenciales incorrectas. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }

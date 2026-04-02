@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiUser, FiMail, FiPhone, FiLock, FiCheckCircle } from 'react-icons/fi';
-import axios from 'axios';
+import { register } from '../api/client';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -30,11 +30,11 @@ const RegisterPage = () => {
     }
     setLoading(true);
     try {
-      await axios.post('http://localhost:8080/api/auth/register', formData);
+      await register(formData);
       setSuccess(true);
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al registrarse. Intenta de nuevo.');
+      setError(err.response?.data?.error || err.response?.data?.message || 'Error al registrarse. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }

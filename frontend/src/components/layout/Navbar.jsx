@@ -24,6 +24,7 @@ export default function Navbar() {
     { to: '/', label: 'Inicio' },
     { to: '/catalogo', label: 'Catálogo' },
     { to: '/pedidos-especiales', label: '🎉 Pedidos Especiales' },
+    { to: '/nosotros', label: '🌸 Nosotros' },
   ];
 
   return (

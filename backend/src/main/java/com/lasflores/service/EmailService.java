@@ -131,6 +131,37 @@ public class EmailService {
         }
     }
 
+    @Async
+    public void sendPasswordResetEmail(String nombre, String email, String resetUrl) {
+        try {
+            Context context = new Context();
+            context.setVariable("nombre", nombre);
+            context.setVariable("resetUrl", resetUrl);
+            context.setVariable("title", "Recupera tu contraseña - Las Flores");
+            String process = templateEngine.process("forgot-password-email", context);
+            sendHtmlEmail(email, "🔑 Recupera tu contraseña - Las Flores", process);
+            log.info("Email de reset enviado a {}", email);
+        } catch (Exception e) {
+            log.error("Error al enviar email de reset: {}", e.getMessage());
+        }
+    }
+
+    @Async
+    public void sendOrderCancellationToUser(Order order) {
+        if (order.getCustomerEmail() == null || order.getCustomerEmail().isBlank()) return;
+        try {
+            Context context = new Context();
+            context.setVariable("order", order);
+            context.setVariable("title", "Pedido cancelado - " + order.getOrderNumber());
+            String process = templateEngine.process("order-cancellation-user-email", context);
+            sendHtmlEmail(order.getCustomerEmail(),
+                    "❌ Pedido Cancelado: " + order.getOrderNumber() + " - Las Flores", process);
+            log.info("Email de cancelación enviado a {}", order.getCustomerEmail());
+        } catch (Exception e) {
+            log.error("Error al enviar email de cancelación al usuario: {}", e.getMessage());
+        }
+    }
+
     private void sendHtmlEmail(String to, String subject, String htmlBody) throws MessagingException {
         MimeMessage message = emailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");

@@ -25,3 +25,6 @@ spring:
       # Cámbialo a 'always' solo la primera vez o cuando necesites reinicializar datos.
       mode: never
       platform: postgresql
+
+app:
+  base-url: ${APP_BASE_URL:https://abarroteslasflores.com}

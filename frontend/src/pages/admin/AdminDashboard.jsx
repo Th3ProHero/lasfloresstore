@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { HiPlus, HiPhotograph, HiLogout, HiX, HiPencil, HiTrash, HiDocumentText, HiViewGrid } from 'react-icons/hi';
-import client, { getProducts, updateProduct, getAdminOrders, updateOrderStatus, getAllPromotions, createPromotion, updatePromotion, deletePromotion, getLegalContent, saveLegalContent, getProductosEspeciales } from '../../api/client';
+import client, { getProducts, updateProduct, getAdminOrders, updateOrderStatus, getAllPromotions, createPromotion, updatePromotion, deletePromotion, getLegalContent, saveLegalContent, getProductosEspeciales, getAdminStats } from '../../api/client';
 import { HiFire, HiOutlineDocumentText } from 'react-icons/hi';
 
 const CATEGORIAS = [
@@ -51,9 +51,13 @@ export default function AdminDashboard() {
   const [showProductDropdown, setShowProductDropdown] = useState(false);
 
   // --- Legal Content ---
-  const [legalDoc, setLegalDoc] = useState('terms_and_conditions'); // currently only terms
+  const [legalDoc, setLegalDoc] = useState('terms_and_conditions');
   const [legalContent, setLegalContent] = useState('');
   const [legalVersion, setLegalVersion] = useState(0);
+
+  // --- Stats ---
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(false);
 
   useEffect(() => {
     // Verificar que estemos autenticados
@@ -344,6 +348,17 @@ export default function AdminDashboard() {
           >
             <HiOutlineDocumentText className="w-5 h-5" />
             <span className="font-semibold text-sm">Textos Legales</span>
+          </button>
+          <button
+            onClick={async () => {
+              setActiveTab('estadisticas');
+              setStatsLoading(true);
+              try { const s = await getAdminStats(); setStats(s); } catch(e) { console.error(e); } finally { setStatsLoading(false); }
+            }}
+            className={`flex items-center gap-3 px-6 py-3 rounded-xl transition-all ${activeTab === 'estadisticas' ? 'bg-sage text-white shadow-md' : 'bg-white text-slate-light hover:bg-cream-200 hover:text-slate-dark'}`}
+          >
+            <span className="text-base">📊</span>
+            <span className="font-semibold text-sm">Estadísticas</span>
           </button>
         </nav>
 
@@ -691,6 +706,104 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ===================== TAB ESTADÍSTICAS ===================== */}
+        {activeTab === 'estadisticas' && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-display text-3xl font-bold text-slate-dark">📊 Estadísticas</h2>
+              <span className="text-slate-light text-sm">Datos en tiempo real</span>
+            </div>
+
+            {statsLoading ? (
+              <div className="flex items-center justify-center py-24">
+                <div className="w-12 h-12 border-4 border-cream-200 border-t-sage rounded-full animate-spin"></div>
+              </div>
+            ) : stats ? (
+              <div className="space-y-8">
+                {/* KPI Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                  {[
+                    { label: 'Ventas del Mes', value: `$${Number(stats.totalVentasMes || 0).toLocaleString('es-MX', {minimumFractionDigits:2})}`, icon: '💰', color: 'from-emerald-500 to-teal-500' },
+                    { label: 'Pedidos del Mes', value: stats.totalPedidosMes || 0, icon: '📦', color: 'from-blue-500 to-indigo-500' },
+                    { label: 'Promedio por Pedido', value: `$${Number(stats.promedioPorPedido || 0).toLocaleString('es-MX', {minimumFractionDigits:2})}`, icon: '📈', color: 'from-terracotta to-orange-500' },
+                  ].map((k, i) => (
+                    <div key={i} className={`bg-gradient-to-br ${k.color} rounded-2xl p-6 text-white shadow-lg`}>
+                      <div className="text-3xl mb-2">{k.icon}</div>
+                      <div className="text-2xl font-bold">{k.value}</div>
+                      <div className="text-sm opacity-80 mt-1">{k.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Ventas últimos 6 meses — barras CSS */}
+                <div className="bg-white rounded-2xl border border-cream-200 shadow-sm p-6">
+                  <h3 className="font-display font-bold text-slate-dark mb-5">Ventas Últimos 6 Meses</h3>
+                  {(() => {
+                    const maxVal = Math.max(...(stats.ventasPorMes || []).map(m => Number(m.total || 0)), 1);
+                    return (
+                      <div className="flex items-end gap-3 h-40">
+                        {(stats.ventasPorMes || []).map((m, i) => {
+                          const pct = Math.max((Number(m.total || 0) / maxVal) * 100, 2);
+                          return (
+                            <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                              <span className="text-xs text-slate-mid font-semibold">${Number(m.total || 0).toFixed(0)}</span>
+                              <div className="w-full bg-cream-100 rounded-t-lg relative" style={{height:'100px'}}>
+                                <div
+                                  className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-sage to-sage/60 rounded-t-lg transition-all"
+                                  style={{height: `${pct}%`}}
+                                />
+                              </div>
+                              <span className="text-[10px] text-slate-light font-medium">{m.mes}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Top 5 Productos */}
+                  <div className="bg-white rounded-2xl border border-cream-200 shadow-sm p-6">
+                    <h3 className="font-display font-bold text-slate-dark mb-4">🏆 Top 5 Productos</h3>
+                    <div className="space-y-3">
+                      {(stats.topProductos || []).map((p, i) => (
+                        <div key={i} className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-terracotta w-5">#{i+1}</span>
+                            <span className="text-slate-dark truncate max-w-[140px]">{p.nombre}</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-slate-light">{p.cantidadVendida} uds</span>
+                            <span className="font-bold text-sage">${Number(p.totalGenerado||0).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      ))}
+                      {(stats.topProductos || []).length === 0 && <p className="text-slate-light text-sm">Sin datos aún.</p>}
+                    </div>
+                  </div>
+
+                  {/* Pedidos por Status */}
+                  <div className="bg-white rounded-2xl border border-cream-200 shadow-sm p-6">
+                    <h3 className="font-display font-bold text-slate-dark mb-4">📋 Pedidos por Status</h3>
+                    <div className="space-y-2">
+                      {Object.entries(stats.pedidosPorStatus || {}).map(([status, count]) => (
+                        <div key={status} className="flex items-center justify-between text-sm">
+                          <span className="font-semibold text-slate-mid">{status}</span>
+                          <span className="bg-cream-100 text-slate-dark font-bold px-3 py-1 rounded-full">{count}</span>
+                        </div>
+                      ))}
+                      {Object.keys(stats.pedidosPorStatus || {}).length === 0 && <p className="text-slate-light text-sm">Sin datos aún.</p>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-slate-light text-center py-12">No se pudieron cargar las estadísticas.</p>
+            )}
           </div>
         )}
       </div>

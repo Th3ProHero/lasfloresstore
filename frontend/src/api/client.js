@@ -99,4 +99,22 @@ export const getLegalContent = (type) =>
 export const saveLegalContent = (type, data) =>
   client.post(`/legal/${type}`, data).then((r) => r.data);
 
+// ─── Auth / Password Reset ────────────────────────
+
+export const forgotPassword = (email) =>
+  client.post('/auth/forgot-password', { email }).then((r) => r.data);
+
+export const resetPassword = (token, newPassword) =>
+  client.post('/auth/reset-password', { token, newPassword }).then((r) => r.data);
+
+// ─── Orders (user) ───────────────────────────────
+
+export const cancelOrder = (orderId, userId) =>
+  client.post(`/orders/${orderId}/cancel`, null, { params: { userId } }).then((r) => r.data);
+
+// ─── Admin Stats ─────────────────────────────────
+
+export const getAdminStats = () =>
+  client.get('/admin/stats').then((r) => r.data);
+
 export default client;

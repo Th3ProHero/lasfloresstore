@@ -1,16 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiPackage, FiCalendar, FiDollarSign, FiClock, FiChevronRight, FiCheckCircle, FiAlertCircle, FiRefreshCw, FiX } from 'react-icons/fi';
-import { getUserOrders } from '../api/client';
+import { FiPackage, FiCalendar, FiDollarSign, FiClock, FiChevronRight, FiCheckCircle, FiAlertCircle, FiRefreshCw, FiX, FiShoppingCart, FiSlash } from 'react-icons/fi';
+import { getUserOrders, cancelOrder } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 
 const OrderHistoryPage = () => {
   const { user } = useAuth();
+  const { addItem } = useCart();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedId, setExpandedId] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [cancellingId, setCancellingId] = useState(null);
 
   const fetchOrders = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true); else setLoading(true);
@@ -32,6 +35,46 @@ const OrderHistoryPage = () => {
   useEffect(() => {
     if (user?.userId) fetchOrders();
   }, [user, fetchOrders]);
+
+  /** Re-add all items from a completed/delivered order to cart */
+  const handleReorder = (order) => {
+    if (!order.items?.length) return;
+    order.items.forEach(item => {
+      addItem({
+        id: item.productId || item.id,
+        nombre: item.productName,
+        precio: item.unitPrice,
+        imagenUrl: null,
+      }, item.cantidad, item.variantSabor || null);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    alert(`✅ Se agregaron ${order.items.length} producto(s) al carrito.`);
+  };
+
+  /** Cancel an order within the 1-hour window */
+  const handleCancel = async (order) => {
+    const confirmed = window.confirm(
+      `¿Cancelar el pedido ${order.orderNumber || '#' + order.id}?\n\nEsta acción es definitiva. Recibirás un correo de confirmación.`
+    );
+    if (!confirmed) return;
+    setCancellingId(order.id);
+    try {
+      await cancelOrder(order.id, user.userId);
+      fetchOrders();
+    } catch (err) {
+      alert(err.response?.data?.message || 'No se pudo cancelar el pedido.');
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
+  const canCancel = (order) => {
+    const CANCELLABLE = ['PENDING', 'AWAITING_CONFIRMATION'];
+    if (!CANCELLABLE.includes(order.status)) return false;
+    const created = new Date(order.createdAt);
+    const diffMs = Date.now() - created.getTime();
+    return diffMs < 60 * 60 * 1000; // 1 hour
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -196,6 +239,31 @@ const OrderHistoryPage = () => {
                                 <span className="font-semibold not-italic">📝 Notas: </span>{order.notas}
                               </div>
                             )}
+
+                            {/* ─ Action Buttons ─ */}
+                            <div className="flex flex-wrap gap-2 pt-2">
+                              {/* Volver a pedir: solo COMPLETED o DELIVERED */}
+                              {['COMPLETED', 'DELIVERED'].includes(order.status) && (
+                                <button
+                                  onClick={() => handleReorder(order)}
+                                  className="flex items-center gap-2 px-4 py-2 bg-sage/10 hover:bg-sage/20 text-sage border border-sage/20 rounded-xl text-sm font-bold transition-colors"
+                                >
+                                  <FiShoppingCart className="w-4 h-4" />
+                                  🔄 Volver a Pedir
+                                </button>
+                              )}
+                              {/* Cancelar: solo dentro de 1 hora */}
+                              {canCancel(order) && (
+                                <button
+                                  onClick={() => handleCancel(order)}
+                                  disabled={cancellingId === order.id}
+                                  className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-sm font-bold transition-colors disabled:opacity-50"
+                                >
+                                  <FiX className="w-4 h-4" />
+                                  {cancellingId === order.id ? 'Cancelando...' : '❌ Cancelar Pedido'}
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </motion.div>
                       )}

@@ -78,9 +78,13 @@ export default function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-white/10 px-6 py-4">
+      <div className="border-t border-white/10 px-6 py-4 space-y-1">
         <p className="text-center text-xs text-cream-400">
           🌸 © {year} Abarrotes Las Flores. Todos los derechos reservados. Hecho con ❤️ en Iztapalapa, CDMX.
+        </p>
+        <p className="text-center text-[11px] text-white/30 tracking-wide">
+          {'</>'}  Página desarrollada por{' '}
+          <span className="text-white/50 font-medium">Mauricio Bautista Flores</span>
         </p>
       </div>
     </footer>

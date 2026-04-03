@@ -23,7 +23,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@jakarta.validation.Valid @RequestBody com.lasflores.dto.RegisterRequest request) {
         if (userRepository.findByCorreo(request.getCorreo()).isPresent()) {
-            return ResponseEntity.badRequest().body(java.util.Map.of("error", "El correo ya está registrado"));
+            return ResponseEntity.status(409).body(java.util.Map.of("error", "El correo ya está registrado"));
         }
 
         if (!request.getPassword().equals(request.getConfirmPassword())) {
